@@ -17,9 +17,19 @@
 #define CSN_PIN   10
 #define Button    3
 #define LED       4
+/////State define
+#define USBread         0
+#define RFwrite         1
+#define RFread          2
+#define parseRFread     3 
+#define 
+
 ///Class define
 class rFDongle {
 public:
+rFDongle() {} //constructor 
+void init(); 
+
 
 
 private: 
