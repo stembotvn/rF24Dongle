@@ -9,6 +9,7 @@
 #define rFDongle_H
 
 #include "RF24.h"
+#include "RF24Network.h"
 #include <SPI.h>
 #include "Scratch.h"
 
@@ -18,26 +19,40 @@
 #define Button    3
 #define LED       4
 /////State define
-#define USBread         0
-#define RFwrite         1
-#define RFread          2
-#define parseRFread     3 
-#define 
-
+#define SerialCheck     0     //check data from PC
+#define RFwrite         1     //Send data via RF 
+#define RFread          2     //Reading data from RF
+#define RFreadParsing   3     //Parsing data received from RF
+#define SerialSend      4     //send data to PC
+#define Ending          5     //ending the transceving 
+#define networkUpdate   6     //update network Status 
+//////
+#define MasterNode    0 
+#define Multicast     1
+#define Unicast       0
 ///Class define
-class rFDongle {
+class nRFDongle {
 public:
-rFDongle() {} //constructor 
+int State = SerialCheck; 
+
+nRFDongle() {} //constructor 
+RF24 radio = RF24(CE_PIN, CSN_PIN);
+RF24Network network = RF24Network(radio);    
 void init(); 
-
-
+void set_address(uint16_t nodeAddr);
+void readSerial();
+void writeRF();
+void readRF();
+void parsingRFread();
+void sendSerial();
+void endProcess();
+void run();
 
 private: 
-  RF24 radio = RF24(CE_PIN, CSN_PIN);
-  const uint64_t _AddDefault = 0xF0F0F0F000LL;  // Địa chỉ truyền tín hiệu NRF24L01 mặc định
 
-
-
+uint16_t _slaveNode = 02; 
+uint16_t _multicastLevel = 01; 
+bool mode = Unicast;            ///send to 1 node 
 };
 
 
