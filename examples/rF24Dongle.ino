@@ -1,5 +1,5 @@
 #include <rFDongle.h>
-rFDongle  dongle; 
+nRFDongle  dongle; 
 
 void setup() {
 dongle.init();

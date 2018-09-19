@@ -33,9 +33,9 @@
 ///Class define
 class nRFDongle {
 public:
+nRFDongle() {} //constructor 
 int State = SerialCheck; 
 
-nRFDongle() {} //constructor 
 RF24 radio = RF24(CE_PIN, CSN_PIN);
 RF24Network network = RF24Network(radio);    
 void init(); 
