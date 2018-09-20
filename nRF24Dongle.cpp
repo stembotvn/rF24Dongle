@@ -67,19 +67,25 @@ else State = Ending;
 //////////////////////////
 void nRFDongle::readRF(){
 network.update(); 
+RFread_size = 0;
 while ( network.available() )  {
   RF24NetworkHeader header;
   network.peek(header);
-  if(header.type == 'A'){
-    network.read(header,&time,sizeof(time));
+  if(header.type == 'T'){
+    RFread_size = network.read(header,RFbuf,MAX_READ_SIZE);
     Serial.print("Got time: ");
     Serial.println(time);
   }
+  if (RFread_size > 1) State = SerialSend;
+  else State = Ending; 
 }
 }
 ////////
 void nRFDongle::sendSerial(){
-
+for (int i = 0;i<RFread_size;i++) {
+  Serial.write(RFbuf[i]);
+  }
+  
 }
 ////////
 void nRFDongle::endProcess(){

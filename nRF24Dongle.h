@@ -36,6 +36,7 @@
 #define MasterNode    0 //address for Master
 #define Multicast     1
 #define Unicast       0
+#define MAX_READ_SIZE 32
 ///Class define
 class nRFDongle {
 public:
@@ -68,7 +69,9 @@ unsigned char prevc = 0;
 byte index = 0;
 byte dataLen = 0;
 unsigned char buffer[32]; // buffer for serial read data
+unsigned char RFbuf[32]; 
 int idx = 0;
+int RFread_size=0; 
 };
 
 #endif 
