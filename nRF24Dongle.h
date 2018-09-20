@@ -27,7 +27,13 @@
 #define Ending          5     //ending the transceving 
 #define networkUpdate   6     //update network Status 
 //////
-#define MasterNode    0 
+//define Serial command mode
+#define GET 1
+#define RUN 2
+#define RESET 4
+#define START 5
+//////
+#define MasterNode    0 //address for Master
 #define Multicast     1
 #define Unicast       0
 ///Class define
@@ -35,7 +41,7 @@ class nRFDongle {
 public:
 nRFDongle() {} //constructor 
 int State = SerialCheck; 
-
+int comSate = RUN_COMMAND; 
 RF24 radio = RF24(CE_PIN, CSN_PIN);
 RF24Network network = RF24Network(radio);    
 void init(); 
@@ -53,7 +59,16 @@ private:
 uint16_t _slaveNode = 02; 
 uint16_t _multicastLevel = 01; 
 bool mode = Unicast;            ///send to 1 node 
+uint8_t payloadLen; 
+////variable for Serial function
+bool isAvailable = false; 
+byte serialReadbyte = 0; 
+bool isStart = false;
+unsigned char prevc = 0; 
+byte index = 0;
+byte dataLen = 0;
+unsigned char buffer[32]; // buffer for serial read data
+int idx = 0;
 };
-
 
 #endif 
