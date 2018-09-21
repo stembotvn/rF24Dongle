@@ -36,6 +36,8 @@
 #define Multicast     1
 #define Unicast       0
 #define MAX_READ_SIZE 32
+#define RUN_TIMEOUT    10000  
+#define GET_TIMEOUT    10000
 ///Class define
 class nRFDongle {
 public:
@@ -72,6 +74,7 @@ unsigned char RFbuf[32];
 int idx = 0;
 int RFread_size=0; 
 unsigned char serialRead;
+unsigned long timeStart; 
 };
 
 #endif 

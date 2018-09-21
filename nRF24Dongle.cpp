@@ -59,7 +59,11 @@ void nRFDongle::parsingSerial(){
 int action = buffer[4];
   int action_type = buffer[5];
   switch(action){
-    case  GET: State = RF_WRITE; 
+    case  GET: { 
+       State  = RF_WRITE; 
+       timeStart = millis();
+
+       }
     break;
      case RUN:{
        if (action_type == SET_ADDRESS) { // setting target address for Robot; 
@@ -67,13 +71,15 @@ int action = buffer[4];
          callOK();
          State = SERIAL_CHECK; 
          }
-        else State = RF_WRITE;  
-
+        else { 
+          State = RF_WRITE;  
+          timeStart = millis();
+        }
      }
       break;
       case RESET:{
         //reset
-         callOK();
+        callOK();
         State = SERIAL_CHECK; 
       }
      break;
@@ -81,9 +87,9 @@ int action = buffer[4];
         //start
         callOK();
         State = SERIAL_CHECK; 
-
       }
      break;
+     
   }
 }
 
