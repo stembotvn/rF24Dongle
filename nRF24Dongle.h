@@ -19,13 +19,12 @@
 #define Button    3
 #define LED       4
 /////State define
-#define SerialCheck     0     //check data from PC
-#define RFwrite         1     //Send data via RF 
-#define RFread          2     //Reading data from RF
-#define RFreadParsing   3     //Parsing data received from RF
-#define SerialSend      4     //send data to PC
-#define Ending          5     //ending the transceving 
-#define networkUpdate   6     //update network Status 
+#define SERIAL_CHECK     0     //check data from PC
+#define RF_WRITE         1     //Send data via RF 
+#define SERIAL_PARSING   2     //Parsing data received from PC
+#define RF_READ          3     //Reading data from RF
+#define SERIAL_SEND      4     //send data to PC
+#define COMMAND_DONE     5 
 //////
 //define Serial command mode
 #define GET 1
@@ -41,18 +40,18 @@
 class nRFDongle {
 public:
 nRFDongle() {} //constructor 
-int State = SerialCheck; 
-int comSate = RUN_COMMAND; 
+int State = SERIAL_CHECK; 
+//int comSate = RUN_COMMAND; 
 RF24 radio = RF24(CE_PIN, CSN_PIN);
 RF24Network network = RF24Network(radio);    
 void init(); 
 void set_address(uint16_t nodeAddr);
 void readSerial();
+void parsingSerial();
 void writeRF();
 void readRF();
-void parsingRFread();
+void callOK();
 void sendSerial();
-void endProcess();
 void run();
 
 private: 
@@ -72,6 +71,7 @@ unsigned char buffer[32]; // buffer for serial read data
 unsigned char RFbuf[32]; 
 int idx = 0;
 int RFread_size=0; 
+unsigned char serialRead;
 };
 
 #endif 

@@ -1,4 +1,4 @@
-#include <rFDongle.h>
+#include <nRF24Dongle.h>
 nRFDongle  dongle; 
 
 void setup() {
