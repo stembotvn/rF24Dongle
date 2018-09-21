@@ -75,6 +75,7 @@ int idx = 0;
 int RFread_size=0; 
 unsigned char serialRead;
 unsigned long timeStart; 
+unsigned long timeout = RUN_TIMEOUT; 
 };
 
 #endif 

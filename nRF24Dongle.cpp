@@ -6,11 +6,11 @@ Serial.begin(115200);
 radio.begin();
 network.begin(108,MasterNode);// Channel Frequency = 108, Node add = 0 (master node)
 }
-/////////////////////////
+///////////////////////////////////////
 void nRFDongle::set_address(uint16_t nodeAddr){
 	_slaveNode = nodeAddr; 
 }
-//////////////////////////
+////////////////////////////////////////
 void nRFDongle::readSerial(){
 isAvailable = false; 
 if (Serial.available() > 0){
@@ -62,7 +62,7 @@ int action = buffer[4];
     case  GET: { 
        State  = RF_WRITE; 
        timeStart = millis();
-
+      timeout=GET_TIMEOUT;
        }
     break;
      case RUN:{
@@ -75,6 +75,7 @@ int action = buffer[4];
           State = RF_WRITE;  
           timeStart = millis();
         }
+        timeout=RUN_TIMEOUT; 
      }
       break;
       case RESET:{
@@ -107,6 +108,11 @@ else {
 void nRFDongle::readRF(){
 network.update(); 
 RFread_size = 0;
+if (millis()-timeStart >timeout) {
+  callOK();
+  State = SERIAL_CHECK; 
+  return;
+}
 while ( network.available() )  {
   RF24NetworkHeader header;
   network.peek(header);
