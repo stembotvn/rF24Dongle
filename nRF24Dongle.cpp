@@ -67,8 +67,8 @@ int action = buffer[4];
     break;
      case RUN:{
        if (action_type == SET_ADDRESS) { // setting target address for Robot; 
-         _slaveNode = buffer[6];
-         callOK();
+        set_address(buffer[6]);        
+        callOK();
          State = SERIAL_CHECK; 
          }
         else { 
@@ -96,7 +96,7 @@ int action = buffer[4];
 
 ///////////////////////////////////////////////////////////////
 void nRFDongle::writeRF(){
-RF24NetworkHeader header(_slaveNode,'T');
+RF24NetworkHeader header(_slaveNode,'T'); //marking data stream is PC/Robot
 bool OK = network.write(header,buffer,payloadLen+2);
 if (OK) State = RF_READ;  //if onnect and send successfully 
 else {
