@@ -1,13 +1,14 @@
 //library for USD RF24 Dongle fimware for Scratch mBlock interface
 //Hardware: AT328P  Arduino Nano Bootloader
-//Serial to RF24 Bridge 
+//Serial to Nordic RF24L01 Bridge for mBlock software
 //Author: Hien PHan
 //Project: Negendo Dongle for Scratch 
 //Negendo Toys company 
 
 #ifndef rFDongle_H
 #define rFDongle_H
-
+#define DEBUG 1
+//#define DEBUG_SERIAL 1
 #include "RF24.h"
 #include "RF24Network.h"
 #include <SPI.h>
@@ -20,8 +21,8 @@
 #define LED       4
 /////State define
 #define SERIAL_CHECK     0     //check data from PC
-#define RF_WRITE         1     //Send data via RF 
-#define SERIAL_PARSING   2     //Parsing data received from PC
+#define SERIAL_PARSING   1     //Parsing data received from PC
+#define RF_WRITE         2     //Send data via RF 
 #define RF_READ          3     //Reading data from RF
 #define SERIAL_SEND      4     //send data to PC
 #define COMMAND_DONE     5 
@@ -32,12 +33,12 @@
 #define RESET 4
 #define START 5
 //////
-#define MasterNode    0 //address for Master
+#define MASTER    0 //address for Master
 #define Multicast     1
 #define Unicast       0
 #define MAX_READ_SIZE 32
-#define RUN_TIMEOUT    10000  
-#define GET_TIMEOUT    10000
+#define RUN_TIMEOUT    10000L  
+#define GET_TIMEOUT    10000L
 ///Class define
 class nRFDongle {
 public:
@@ -56,14 +57,13 @@ void sendSerial();
 void run();
 
 private: 
-
+uint16_t masterNode = MASTER; 
 uint16_t _slaveNode = 02; 
 uint16_t _multicastLevel = 01; 
 bool mode = Unicast;            ///send to 1 node 
 uint8_t payloadLen; 
 ////variable for Serial function
 bool isAvailable = false; 
-byte serialReadbyte = 0; 
 bool isStart = false;
 unsigned char prevc = 0; 
 byte index = 0;
@@ -73,7 +73,8 @@ unsigned char RFbuf[32];
 int idx = 0;
 int RFread_size=0; 
 unsigned char serialRead;
-unsigned long timeStart; 
+double timeStart; 
 unsigned long timeout = RUN_TIMEOUT; 
-};
+bool first_run = true; 
+};/////
 #endif 
