@@ -13,7 +13,7 @@
 #include <SPI.h>
 #include "Scratch.h"
 
-/////Pins define 
+/////Pins define////////////////////////////////////////
 #define CE_PIN    9
 #define CSN_PIN   10
 #define Button    3
@@ -26,7 +26,7 @@
 #define SERIAL_SEND      4     //send data to PC
 #define COMMAND_DONE     5 
 //////
-//define Serial command mode
+//define Serial command mode//////////////////////////////
 #define GET 1
 #define RUN 2
 #define RESET 4
@@ -41,7 +41,7 @@
 ///Class define
 class nRFDongle {
 public:
-nRFDongle() {} //constructor 
+nRFDongle() {} //constructor//////////////////////////////// 
 int State = SERIAL_CHECK; 
 RF24 radio = RF24(CE_PIN, CSN_PIN);
 RF24Network network = RF24Network(radio);    
@@ -76,5 +76,4 @@ unsigned char serialRead;
 unsigned long timeStart; 
 unsigned long timeout = RUN_TIMEOUT; 
 };
-
 #endif 
