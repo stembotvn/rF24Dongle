@@ -76,7 +76,8 @@ if (isAvailable) {
         index=0;
      }
   }
-}/////
+}
+///////////////////////////////////////////////////////////////////
 void nRFDongle::callOK(){   //sending 0xff 0x55 /r /n
  Serial.write(0xff);
  Serial.write(0x55);
@@ -162,13 +163,11 @@ else {
    callOK();    
    State = SERIAL_CHECK;    //exit when time out
             first_run = true;      //set first run for next State
-
      #ifdef DEBUG 
          Serial.print("Sending fail to address: ");
          Serial.println(_slaveNode);
         Serial.println("Go to back to read Serial");
-
-   #endif 
+     #endif 
    }
  }
 }
@@ -218,7 +217,7 @@ while ( network.available() )  {
   } 
  }
 }
-////////
+///////////////////////////////////
 void nRFDongle::sendSerial(){
 for (int i = 0;i<RFread_size;i++) { 
   Serial.print(RFbuf[i]);
@@ -227,8 +226,7 @@ State = SERIAL_CHECK;
 first_run = true;      //set first run for next State
 
 }
-
-////
+///////////////////////////////////
 void nRFDongle::run(){
 if (first_run)  {
    timeStart = millis();
@@ -250,7 +248,7 @@ switch (State) {
   parsingSerial();
   }
   break;
-  
+
   case RF_WRITE :{
   writeRF();
   }
@@ -265,5 +263,10 @@ switch (State) {
   sendSerial();
   }
   break; 
-  } 	
+    
+  case SETTING_ADDRESS :{
+  sendSerial();
+  }
+  break; 
+  } 
 }

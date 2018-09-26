@@ -1272,11 +1272,10 @@ uint16_t levelToAddress(uint8_t level){
 
 uint64_t pipe_address( uint16_t node, uint8_t pipe )
 {
-  
+   
   static uint8_t address_translation[] = { 0xc3,0x3c,0x33,0xce,0x3e,0xe3,0xec };
   uint64_t result = 0xCCCCCCCCCCLL;
-  uint8_t* out = reinterpret_cast<uint8_t*>(&result);
-  
+  uint8_t* out = reinterpret_cast<uint8_t*>(&result);  //
   // Translate the address to use our optimally chosen radio address bytes
 	uint8_t count = 1; uint16_t dec = node;
 
@@ -1298,8 +1297,6 @@ uint64_t pipe_address( uint16_t node, uint8_t pipe )
 	else
 	  out[1] = address_translation[count-1];
 	#endif
-
- 		
   
   #if defined (RF24_LINUX)
   IF_SERIAL_DEBUG(uint32_t* top = reinterpret_cast<uint32_t*>(out+1);printf_P(PSTR("%u: NET Pipe %i on node 0%o has address %x%x\n\r"),millis(),pipe,node,*top,*out));

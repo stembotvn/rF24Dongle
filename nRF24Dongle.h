@@ -26,6 +26,7 @@
 #define RF_READ          3     //Reading data from RF
 #define SERIAL_SEND      4     //send data to PC
 #define COMMAND_DONE     5 
+#define SETTING_ADDRESS  6
 //////
 //define Serial command mode//////////////////////////////
 #define GET 1
@@ -40,6 +41,7 @@
 #define RUN_TIMEOUT    10000L  
 #define GET_TIMEOUT    10000L
 ///Class define
+
 class nRFDongle {
 public:
 nRFDongle() {} //constructor//////////////////////////////// 
