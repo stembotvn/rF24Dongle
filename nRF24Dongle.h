@@ -9,8 +9,7 @@
 #define rFDongle_H
 #define DEBUG 1
 //#define DEBUG_SERIAL 1
-#include "RF24.h"
-#include "RF24Network.h"
+#include "EasyRF.h"
 #include <SPI.h>
 #include "Scratch.h"
 
@@ -46,10 +45,10 @@ class nRFDongle {
 public:
 nRFDongle() {} //constructor//////////////////////////////// 
 int State = SERIAL_CHECK; 
-RF24 radio = RF24(CE_PIN, CSN_PIN);
-RF24Network network = RF24Network(radio);    
+EasyRF radio = EasyRF(CE_PIN, CSN_PIN);
+  
 void init(); 
-void set_address(uint16_t nodeAddr);
+void set_address(uint16_t from,uint16_t to);
 void readSerial();
 void parsingSerial();
 void writeRF();
@@ -59,8 +58,8 @@ void sendSerial();
 void run();
 
 private: 
-uint16_t masterNode = MASTER; 
-uint16_t _slaveNode = 02; 
+uint16_t myNode = MASTER; 
+uint16_t toNode = 02; 
 uint16_t _multicastLevel = 01; 
 bool mode = Unicast;            ///send to 1 node 
 uint8_t payloadLen; 

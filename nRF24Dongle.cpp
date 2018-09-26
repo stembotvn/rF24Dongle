@@ -3,8 +3,7 @@
 void nRFDongle::init(){
 Serial.begin(115200);
 SPI.begin();
-radio.begin();
-network.begin(108,masterNode);// Channel Frequency = 108, Node add = 0 (master node)
+radio.init(myNode);//init RF and setting Master Node address 
    #ifdef DEBUG 
          Serial.print("Dongle begin with address: ");
          Serial.println(masterNode);
@@ -14,9 +13,13 @@ network.begin(108,masterNode);// Channel Frequency = 108, Node add = 0 (master n
    #endif
 }
 ///////////////////////////////////////
-void nRFDongle::set_address(uint16_t nodeAddr){
-	_slaveNode = nodeAddr; 
+void nRFDongle::set_address(uint16_t from,uint16_t to){
+	myNode = from; 
+  toNode = to;
+  radio.SetAddress(myNode);
 }
+///////////////////////////////////////
+
 ////////////////////////////////////////
 void nRFDongle::readSerial(){
 isAvailable = false; 
@@ -138,13 +141,11 @@ void nRFDongle::parsingSerial(){
 
 ///////////////////////////////////////////////////////////////
 void nRFDongle::writeRF(){
-network.update();  
-RF24NetworkHeader Writeheader(_slaveNode,'T'); //marking data stream is PC/Robot
   #ifdef DEBUG 
          Serial.print("..Sending data to address: ");
-         Serial.println(_slaveNode);
+         Serial.println(toNode);
    #endif
-bool OK = network.write(Writeheader,buffer,payloadLen+2);
+bool OK = radio.RFSend(toNode,buffer,payloadLen+2);
   #ifdef DEBUG 
          Serial.print("Sent!.. ");
    #endif
@@ -154,7 +155,7 @@ if (OK) {
 
    #ifdef DEBUG 
          Serial.print("Send Successfully to address: ");
-         Serial.println(_slaveNode);
+         Serial.println(toNode);
          Serial.println("Go to Read RF");
    #endif
 }
@@ -165,7 +166,7 @@ else {
             first_run = true;      //set first run for next State
      #ifdef DEBUG 
          Serial.print("Sending fail to address: ");
-         Serial.println(_slaveNode);
+         Serial.println(toNode);
         Serial.println("Go to back to read Serial");
      #endif 
    }
@@ -173,7 +174,6 @@ else {
 }
 ///////////////////////////////////////////////////////////
 void nRFDongle::readRF(){
-network.update(); 
 RFread_size = 0;
 if (millis()-timeStart >timeout) {
      #ifdef DEBUG 
@@ -186,17 +186,14 @@ if (millis()-timeStart >timeout) {
 
   return;
 }
-while ( network.available() )  {
+while ( radio.RFDataCome() )  {
      #ifdef DEBUG 
        Serial.println("RF data comming, read available");
      #endif
-  RF24NetworkHeader Readheader;
-  network.peek(Readheader);
-  if(Readheader.type == 'T'){
-    RFread_size = network.read(Readheader,RFbuf,MAX_READ_SIZE);
+    RFread_size = radio.RFRead(RFbuf);
        #ifdef DEBUG 
          Serial.print("Read RF buffer from Slave Node address ");
-         Serial.println(Readheader.from_node);
+         Serial.println(toNode);
          Serial.println("Go to Write Serial data:");
    #endif
     }
