@@ -6,7 +6,7 @@ SPI.begin();
 radio.init(myNode);//init RF and setting Master Node address 
    #ifdef DEBUG 
          Serial.print("Dongle begin with address: ");
-         Serial.println(masterNode);
+         Serial.println(myNode);
          Serial.print("State now: ");
          Serial.println(State);
          Serial.println("Go to Read Serial");
@@ -101,7 +101,7 @@ void nRFDongle::parsingSerial(){
     break;
      case RUN:{
        if (action_type == SET_ADDRESS) { // setting target address for Robot; 
-        set_address(buffer[6]);        
+        set_address(myNode,buffer[6]);        
         callOK();
          State = SERIAL_CHECK;         //Done, go back to Serial read for next message
                   first_run = true;      //set first run for next State
@@ -186,7 +186,7 @@ if (millis()-timeStart >timeout) {
 
   return;
 }
-while ( radio.RFDataCome() )  {
+if ( radio.RFDataCome() )  {
      #ifdef DEBUG 
        Serial.println("RF data comming, read available");
      #endif
@@ -213,7 +213,7 @@ while ( radio.RFDataCome() )  {
 
   } 
  }
-}
+
 ///////////////////////////////////
 void nRFDongle::sendSerial(){
 for (int i = 0;i<RFread_size;i++) { 

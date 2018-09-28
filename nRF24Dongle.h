@@ -45,8 +45,8 @@ class nRFDongle {
 public:
 nRFDongle() {} //constructor//////////////////////////////// 
 int State = SERIAL_CHECK; 
-EasyRF radio = EasyRF(CE_PIN, CSN_PIN);
-  
+RF24 myRadio = RF24(CE_PIN, CSN_PIN);
+EasyRF radio = EasyRF(myRadio);   
 void init(); 
 void set_address(uint16_t from,uint16_t to);
 void readSerial();
@@ -59,8 +59,8 @@ void run();
 
 private: 
 uint16_t myNode = MASTER; 
-uint16_t toNode = 02; 
-uint16_t _multicastLevel = 01; 
+uint16_t toNode = 2; 
+uint16_t _multicastLevel = 1; 
 bool mode = Unicast;            ///send to 1 node 
 uint8_t payloadLen; 
 ////variable for Serial function
