@@ -7,7 +7,7 @@
 
 #ifndef rFDongle_H
 #define rFDongle_H
-#define DEBUG 1
+//#define DEBUG 1
 //#define DEBUG_SERIAL 1
 #include "EasyRF.h"
 #include <SPI.h>

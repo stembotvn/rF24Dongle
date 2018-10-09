@@ -41,7 +41,7 @@ if (isAvailable) {
       index=1;
       isStart = true;
       #ifdef DEBUG_SERIAL
-      Serial.print("*");
+     // Serial.print("*");
       #endif 
       //buffer[index]=c;
     }
@@ -51,13 +51,15 @@ if (isAvailable) {
         if(index==2){
          dataLen = c; 
           #ifdef DEBUG_SERIAL
-         Serial.print(c);
+         Serial.print(c,HEX);
+         Serial.print(" ");
          #endif 
          payloadLen = dataLen; 
         }else if(index>2){
           dataLen--;
             #ifdef DEBUG_SERIAL
              Serial.print(dataLen);
+             Serial.print(" ");
             #endif
         }
       }
@@ -74,8 +76,8 @@ if (isAvailable) {
          first_run = true;      //set first run for next State
          #ifdef DEBUG 
          Serial.print("Valid Data coming, number of payload bytes: ");Serial.println(payloadLen);
-         for (int i=0;i<payloadLen+2;i++) {
-           Serial.print(buffer[i]); Serial.print("-");
+         for (int i=0;i<payloadLen+3;i++) {
+           Serial.print(buffer[i],HEX); Serial.print("-");
          }
          Serial.println();
          Serial.println("Goto Parsing");
@@ -156,7 +158,7 @@ void nRFDongle::writeRF(){
          Serial.print("..Sending data to address: ");
          Serial.println(toNode);
    #endif
-bool OK = radio.RFSend(toNode,buffer,payloadLen+2);
+bool OK = radio.RFSend(toNode,buffer,payloadLen+3);
   #ifdef DEBUG 
          Serial.print("Sent!.. ");
    #endif
@@ -205,8 +207,12 @@ if ( radio.RFDataCome() )  {
        #ifdef DEBUG 
          Serial.print("Read RF buffer from Slave Node address ");
          Serial.println(toNode);
+         for (int i = 0;i<RFread_size;i++) {
+           Serial.print(RFbuf[i],HEX);Serial.print(" ");
+         }
+         Serial.println();
          Serial.println("Go to Write Serial data:");
-   #endif
+       #endif
     }
   if (RFread_size > 1) {
      State = SERIAL_SEND;
@@ -227,12 +233,19 @@ if ( radio.RFDataCome() )  {
 
 ///////////////////////////////////
 void nRFDongle::sendSerial(){
+#if DEBUG
+Serial.print("SENDING DATA RESPONSE TO PC...:"); Serial.println(RFread_size);
+#endif
 for (int i = 0;i<RFread_size;i++) { 
-  Serial.print(RFbuf[i]);
+  Serial.write(RFbuf[i]);
+  _delay_us(100);
+  //Serial.print(i);
   }
 State = SERIAL_CHECK;  
-first_run = true;      //set first run for next State
-
+first_run = true;   //set first run for next State
+#if DEBUG
+Serial.println("SENDING DONE! BACK TO READ SERIAL COMMAND");
+#endif
 }
 ///////////////////////////////////
 void nRFDongle::run(){
@@ -339,9 +352,9 @@ CFGbuffer[idx++] = 0x02; //RUN, NOT GET RESPONSE VALUE
 CFGbuffer[idx++] = 80;   // CONFIG ADDRESSING TYPE OF COMMAND
 addValue(idx,toNode);
 addValue(idx,myNode);
-CFGbuffer[idx] = 0xA; // line Feed
+//CFGbuffer[idx] = 0xA; // line Feed
 int len = idx + 1;
-CFGbuffer[2] = len-2;
+CFGbuffer[2] = len-3;
 #ifdef DEBUG
   for (int i=0;i<len;i++) {
     Serial.print(CFGbuffer[i],HEX); Serial.print(" ");
