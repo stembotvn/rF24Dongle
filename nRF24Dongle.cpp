@@ -3,20 +3,27 @@
 void nRFDongle::init(){
 Serial.begin(115200);
 SPI.begin();
-radio.begin();
-network.begin(108,masterNode);// Channel Frequency = 108, Node add = 0 (master node)
+loadConfig();
+radio.init(myNode);//init RF and setting Master Node address 
    #ifdef DEBUG 
          Serial.print("Dongle begin with address: ");
-         Serial.println(masterNode);
+         Serial.println(myNode);
          Serial.print("State now: ");
          Serial.println(State);
          Serial.println("Go to Read Serial");
    #endif
+pinMode(KEY,INPUT_PULLUP);  
+//randomSeed(analogRead(0));
+
 }
 ///////////////////////////////////////
-void nRFDongle::set_address(uint16_t nodeAddr){
-	_slaveNode = nodeAddr; 
+void nRFDongle::set_address(uint16_t from,uint16_t to){
+	myNode = from; 
+  toNode = to;
+  radio.init(myNode);
 }
+///////////////////////////////////////
+
 ////////////////////////////////////////
 void nRFDongle::readSerial(){
 isAvailable = false; 
@@ -34,7 +41,7 @@ if (isAvailable) {
       index=1;
       isStart = true;
       #ifdef DEBUG_SERIAL
-      Serial.print("*");
+     // Serial.print("*");
       #endif 
       //buffer[index]=c;
     }
@@ -44,13 +51,15 @@ if (isAvailable) {
         if(index==2){
          dataLen = c; 
           #ifdef DEBUG_SERIAL
-         Serial.print(c);
+         Serial.print(c,HEX);
+         Serial.print(" ");
          #endif 
          payloadLen = dataLen; 
         }else if(index>2){
           dataLen--;
             #ifdef DEBUG_SERIAL
              Serial.print(dataLen);
+             Serial.print(" ");
             #endif
         }
       }
@@ -67,8 +76,8 @@ if (isAvailable) {
          first_run = true;      //set first run for next State
          #ifdef DEBUG 
          Serial.print("Valid Data coming, number of payload bytes: ");Serial.println(payloadLen);
-         for (int i=0;i<payloadLen+2;i++) {
-           Serial.print(buffer[i]); Serial.print("-");
+         for (int i=0;i<payloadLen+3;i++) {
+           Serial.print(buffer[i],HEX); Serial.print("-");
          }
          Serial.println();
          Serial.println("Goto Parsing");
@@ -76,6 +85,12 @@ if (isAvailable) {
         index=0;
      }
   }
+ 
+   if (!isStart&&!isAvailable) 
+     {
+        checkConfig();
+    }
+  
 }
 ///////////////////////////////////////////////////////////////////
 void nRFDongle::callOK(){   //sending 0xff 0x55 /r /n
@@ -98,17 +113,18 @@ void nRFDongle::parsingSerial(){
     break;
      case RUN:{
        if (action_type == SET_ADDRESS) { // setting target address for Robot; 
-        set_address(buffer[6]);        
+        set_address(MASTER,buffer[6]);      //save new address to RAM for next CONFIG PROCESS  
         callOK();
-         State = SERIAL_CHECK;         //Done, go back to Serial read for next message
-                  first_run = true;      //set first run for next State
-
+        if (buffer[6]==255) mode = MULTICAST;
+        else mode = UNICAST;
+        configMode = NETWORK_ADDRESSING;
+        State = SERIAL_CHECK;         //Done, go back to Serial read for next message
+        first_run = true;      //set first run for next State
          }
-        else { 
+         else { 
           State = RF_WRITE;  
-                   first_run = true;      //set first run for next State
-
-          timeStart = millis();
+          first_run = true;     //set first run for next State
+          timeStart = millis();    
            #ifdef DEBUG 
            Serial.println("Goto Send RF");
            #endif
@@ -120,7 +136,7 @@ void nRFDongle::parsingSerial(){
         //reset
         callOK();
         State = SERIAL_CHECK; 
-                 first_run = true;      //set first run for next State
+        first_run = true;      //set first run for next State
 
       }
      break;
@@ -138,13 +154,12 @@ void nRFDongle::parsingSerial(){
 
 ///////////////////////////////////////////////////////////////
 void nRFDongle::writeRF(){
-network.update();  
-RF24NetworkHeader Writeheader(_slaveNode,'T'); //marking data stream is PC/Robot
   #ifdef DEBUG 
          Serial.print("..Sending data to address: ");
-         Serial.println(_slaveNode);
+         Serial.println(toNode);
    #endif
-bool OK = network.write(Writeheader,buffer,payloadLen+2);
+
+bool OK = radio.RFSend(toNode,buffer,payloadLen+3);
   #ifdef DEBUG 
          Serial.print("Sent!.. ");
    #endif
@@ -154,7 +169,7 @@ if (OK) {
 
    #ifdef DEBUG 
          Serial.print("Send Successfully to address: ");
-         Serial.println(_slaveNode);
+         Serial.println(toNode);
          Serial.println("Go to Read RF");
    #endif
 }
@@ -165,7 +180,7 @@ else {
             first_run = true;      //set first run for next State
      #ifdef DEBUG 
          Serial.print("Sending fail to address: ");
-         Serial.println(_slaveNode);
+         Serial.println(toNode);
         Serial.println("Go to back to read Serial");
      #endif 
    }
@@ -173,32 +188,32 @@ else {
 }
 ///////////////////////////////////////////////////////////
 void nRFDongle::readRF(){
-network.update(); 
 RFread_size = 0;
 if (millis()-timeStart >timeout) {
      #ifdef DEBUG 
          Serial.print("..Time out, not received response");
          Serial.println("Go back to Read Serial");
-   #endif
+     #endif
   callOK();
   State = SERIAL_CHECK; 
            first_run = true;      //set first run for next State
-
+  
   return;
 }
-while ( network.available() )  {
+if ( radio.RFDataCome() )  {
      #ifdef DEBUG 
        Serial.println("RF data comming, read available");
      #endif
-  RF24NetworkHeader Readheader;
-  network.peek(Readheader);
-  if(Readheader.type == 'T'){
-    RFread_size = network.read(Readheader,RFbuf,MAX_READ_SIZE);
+    RFread_size = radio.RFRead(RFbuf);
        #ifdef DEBUG 
          Serial.print("Read RF buffer from Slave Node address ");
-         Serial.println(Readheader.from_node);
+         Serial.println(toNode);
+         for (int i = 0;i<RFread_size;i++) {
+           Serial.print(RFbuf[i],HEX);Serial.print(" ");
+         }
+         Serial.println();
          Serial.println("Go to Write Serial data:");
-   #endif
+       #endif
     }
   if (RFread_size > 1) {
      State = SERIAL_SEND;
@@ -212,19 +227,26 @@ while ( network.available() )  {
          Serial.println("Data received not match");
    #endif   
    State = SERIAL_CHECK; 
-            first_run = true;      //set first run for next State
+   first_run = true;      //set first run for next State
 
   } 
  }
-}
+
 ///////////////////////////////////
 void nRFDongle::sendSerial(){
+#if DEBUG
+Serial.print("SENDING DATA RESPONSE TO PC...:"); Serial.println(RFread_size);
+#endif
 for (int i = 0;i<RFread_size;i++) { 
-  Serial.print(RFbuf[i]);
+  Serial.write(RFbuf[i]);
+  _delay_us(100);
+  //Serial.print(i);
   }
 State = SERIAL_CHECK;  
-first_run = true;      //set first run for next State
-
+first_run = true;   //set first run for next State
+#if DEBUG
+Serial.println("SENDING DONE! BACK TO READ SERIAL COMMAND");
+#endif
 }
 ///////////////////////////////////
 void nRFDongle::run(){
@@ -264,9 +286,132 @@ switch (State) {
   }
   break; 
     
-  case SETTING_ADDRESS :{
-  sendSerial();
-  }
-  break; 
+ 
   } 
+}
+///////////////////////////
+///Private function////////
+void nRFDongle::checkConfig() {
+bool accessed = false;
+if (!digitalRead(KEY)) {
+  double start = millis();  
+  while (!digitalRead(KEY)) {
+    if (millis()-start>500) accessed = true; 
+  }
+  if (accessed) {//access Sending CONFIG IF PRESS AND HOLD KEY IN 2 SEC
+  // configMode = RANDOOM_ADDRESSING;
+      #ifdef DEBUG
+      Serial.println("Config mode is accessed");
+      #endif
+      if (configMode == RANDOOM_ADDRESSING) {
+       #ifdef DEBUG
+      Serial.println("RANDOM ADDRESSING MODE CONFIG");
+      #endif
+      randomSeed(millis());
+      myNode = random(256,999);      //get randoom of my Address
+      toNode = random(1001,2000);  //get randoom of Targeting Address
+   //   myNode = (uint16_t)(millis()-start)/2;
+   //   toNode = (uint16_t)(millis()-start);
+      #ifdef DEBUG
+      Serial.println("Got new address");
+      Serial.print("My address: ");Serial.print(myNode,HEX);Serial.print("  Target address: ");Serial.println(toNode,HEX);
+      #endif
+      delay(1000);
+      radio.init(myNode); // update my address
+      mode = UNICAST; 
+      sendConfig();
+      saveConfig();
+      accessed = false; 
+      }
+      else if (configMode == NETWORK_ADDRESSING) {
+      #ifdef DEBUG
+      Serial.println("RANDOM ADDRESSING MODE CONFIG");
+      #endif  
+      sendConfig();  //just send config to target, not save in DOngle. 
+      }
+   }
+   else {
+      #ifdef DEBUG
+      Serial.println("Not access to CONFIG MODE");
+      #endif 
+   }
+ }
+
+}
+/////
+void nRFDongle::sendConfig(){
+ #ifdef DEBUG
+      Serial.println("Sending config data:...");
+      Serial.print("USB Address: ");Serial.print(myNode); Serial.print("   Robot address: "); Serial.println(toNode);
+      #endif
+idx = 0;
+CFGbuffer[idx++] = 0xFF;
+CFGbuffer[idx++] = 0x55;
+CFGbuffer[idx++] = 0x00;   //Len = 6 bytes
+CFGbuffer[idx++] = 0x00;
+CFGbuffer[idx++] = 0x02; //RUN, NOT GET RESPONSE VALUE
+CFGbuffer[idx++] = 80;   // CONFIG ADDRESSING TYPE OF COMMAND
+addValue(idx,toNode);
+addValue(idx,myNode);
+//CFGbuffer[idx] = 0xA; // line Feed
+int len = idx + 1;
+CFGbuffer[2] = len-3;
+#ifdef DEBUG
+  for (int i=0;i<len;i++) {
+    Serial.print(CFGbuffer[i],HEX); Serial.print(" ");
+  }
+  Serial.println();
+  #endif
+bool OK=radio.RFSend(Default_Addr,CFGbuffer,len);
+if (OK) { 
+  #ifdef DEBUG
+  Serial.println("Sent Config addressing successful ");
+  #endif
+    }
+else {
+  #ifdef DEBUG
+  Serial.println("Sent Config addressing FAIL!");
+  #endif
+ }  
+}
+////////////////////////////////////////////////////
+void nRFDongle::addValue(int pos,uint16_t val) {
+idx = pos;  
+valShort.shortVal = val; 
+CFGbuffer[idx++] = valShort.byteVal[0];
+CFGbuffer[idx++] = valShort.byteVal[1];
+}
+//////////////////////////////////////////////////
+void nRFDongle::saveConfig(){
+EEPROM_writeInt(0,myNode);
+EEPROM_writeInt(2,toNode);
+
+}
+////
+void nRFDongle::loadConfig(){
+uint16_t myAd,toAd;  
+myNode = EEPROM_readInt(0);
+toNode = EEPROM_readInt(2);
+//set_address(myAd,toAd);
+}
+//////////////////////////////////////////
+void nRFDongle::EEPROM_writeInt(int address,uint16_t value) {
+  
+      //Decomposition from a int to 2 bytes by using bitshift.
+      //One = Most significant -> Two = Least significant byte
+      byte two = (value & 0xFF);
+      byte one = ((value >> 8) & 0xFF);
+      
+
+      //Write the 2 bytes into the eeprom memory.
+      EEPROM.write(address, two);
+      EEPROM.write(address + 1, one);
+     
+     
+}
+/////////////////////////
+uint16_t nRFDongle::EEPROM_readInt(int address){
+uint16_t two = EEPROM.read(address);
+uint16_t one = EEPROM.read(address+1); 
+return ((two & 0xFF) + ((one<<8)&0xFFFF));
 }
