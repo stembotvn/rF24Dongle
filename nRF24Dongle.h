@@ -8,27 +8,26 @@
 #ifndef rFDongle_H
 #define rFDongle_H
 //#define DEBUG 1
-//#define DEBUG_SERIAL 1
+//#define DEBUG_SERIAL 1////////////////////////////////////
 #include "EasyRF.h"
 #include <SPI.h>
 #include "Scratch.h"
 #include "EEPROM.h"
-
 /////Pins define///////////////////////////////////////////
-#define CE_PIN    9
-#define CSN_PIN   10
-#define KEY    3
-#define LED       4
+#define CE_PIN  9
+#define CSN_PIN 10
+#define KEY     3
+#define LED     4
 /////State define//////////////////////////////////////////
-#define SERIAL_CHECK     0     //check data from PC
+#define SERIAL_CHECK     0     //check data from PC     ///
 #define SERIAL_PARSING   1     //Parsing data received from PC
-#define RF_WRITE         2     //Send data via RF 
+#define RF_WRITE         2     //Send data via RF       
 #define RF_READ          3     //Reading data from RF
 #define SERIAL_SEND      4     //send data to PC
 #define COMMAND_DONE     5     
 #define SETTING_ADDRESS  6
-#define CONFIG      7
-//////////////////////////////////////////////////////////
+#define CONFIG           7
+///////////////////////////////////////////////////////////
 //define Serial command mode//////////////////////////////
 /////////////////////////////////////////////////////////////
 #define GET 1
@@ -37,8 +36,14 @@
 #define START 5
 //////
 #define MASTER    0 //address for Master
-#define Multicast     1
-#define Unicast       0
+/////Mode 
+#define MULTICAST     1
+#define UNICAST       0
+////
+#define MULTICAST_ADDRESS 255
+#define MULTICAST_CHANNEL 2 
+#define DEFAULT_ADDRESS 1000
+/////
 #define MAX_READ_SIZE 32
 #define RUN_TIMEOUT    10000L  
 #define GET_TIMEOUT    10000L
@@ -66,19 +71,19 @@ void run();
 
 private: 
 uint16_t myNode = MASTER; 
-uint16_t toNode = 2; 
-uint16_t  Default_Addr = 1000;
-uint16_t _multicastLevel = 1; 
+uint16_t toNode = 2;    
+uint16_t multiCast_Node = MULTICAST_ADDRESS;
+uint16_t  Default_Addr = DEFAULT_ADDRESS;
 uint8_t configMode = RANDOOM_ADDRESSING; 
-bool mode = Unicast;            ///send to 1 node 
-uint8_t payloadLen; 
+bool mode = UNICAST;            ///send to 1 node 
+uint8_t payloadLen;             
 ////variable for Serial function
 bool isAvailable = false; 
 bool isStart = false;
 unsigned char prevc = 0; 
 byte index = 0;
 byte dataLen = 0;
-unsigned char buffer[32]; // buffer for serial read data
+unsigned char buffer[32]; // buffer for serial read data 
 unsigned char RFbuf[32]; 
 int RFread_size=0; 
 unsigned char serialRead;
@@ -105,7 +110,7 @@ uint8_t CFGbuffer[32];
   void sendShort(double value); 
   void saveConfig();
   void loadConfig();
-   void EEPROM_writeInt(int address,uint16_t value);
+  void EEPROM_writeInt(int address,uint16_t value);
   uint16_t EEPROM_readInt(int address);
 
 };/////
