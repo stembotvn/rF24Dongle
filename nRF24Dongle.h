@@ -110,7 +110,6 @@ uint8_t CFGbuffer[32];
   void addValue(int pos,uint16_t value);
   void writeHead();
   void writeEnd();
-  void writeSerial(char c);
   /////////////////////////////////////////
   void writeBuffer(int index,unsigned char c); //write to RF Sending Buffer
   /////////////////////////////////

@@ -434,10 +434,10 @@ return ((two & 0xFF) + ((one<<8)&0xFFFF));
 }
 ////
 void nRFDongle::sendFloat(float value){ 
-     writeSerial(0x2);
+     Serial.write(0x2);
      val.floatVal = value;
-     writeSerial(val.byteVal[0]);
-     writeSerial(val.byteVal[1]);
-     writeSerial(val.byteVal[2]);
-     writeSerial(val.byteVal[3]);
+     Serial.write(val.byteVal[0]);
+     Serial.write(val.byteVal[1]);
+     Serial.write(val.byteVal[2]);
+     Serial.write(val.byteVal[3]);
 }
