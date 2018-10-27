@@ -76,6 +76,7 @@ uint16_t multiCast_Node = MULTICAST_ADDRESS;
 uint16_t  Default_Addr = DEFAULT_ADDRESS;
 uint8_t configMode = RANDOOM_ADDRESSING; 
 bool mode = UNICAST;            ///send to 1 node 
+bool done = false; 
 uint8_t payloadLen;             
 ////variable for Serial function
 bool isAvailable = false; 
@@ -99,15 +100,22 @@ uint8_t CFGbuffer[32];
     byte byteVal[2];
     short shortVal;
   }valShort;
+  union{
+    byte byteVal[4];
+    float floatVal;
+    long longVal;
+}val;
   //////////////////////////////////////////////////////////////
   void startPackage(uint8_t *buf,uint8_t type,uint8_t action); 
   void addValue(int pos,uint16_t value);
   void writeHead();
   void writeEnd();
+  void writeSerial(char c);
   /////////////////////////////////////////
   void writeBuffer(int index,unsigned char c); //write to RF Sending Buffer
   /////////////////////////////////
   void sendShort(double value); 
+  void sendFloat(float value);
   void saveConfig();
   void loadConfig();
   void EEPROM_writeInt(int address,uint16_t value);

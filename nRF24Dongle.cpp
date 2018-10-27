@@ -92,6 +92,7 @@ if (isAvailable) {
     }
   
 }
+
 ///////////////////////////////////////////////////////////////////
 void nRFDongle::callOK(){   //sending 0xff 0x55 /r /n
  Serial.write(0xff);
@@ -100,15 +101,28 @@ void nRFDongle::callOK(){   //sending 0xff 0x55 /r /n
 }
 ///////
 void nRFDongle::parsingSerial(){
+    int idx = buffer[3];
   int action = buffer[4];
   int action_type = buffer[5];
   switch(action){
     case  GET: { 
+      if (action_type!=DONE) {
        State  = RF_WRITE; 
        first_run = true;      //set first run for next State
 
        timeStart = millis();
       timeout=GET_TIMEOUT;
+      }
+      else {
+          Serial.write(0xff);
+          Serial.write(0x55);        
+          Serial.write(idx);
+          sendFloat(done);
+          Serial.println();
+
+          State = SERIAL_CHECK;
+        first_run = true;
+      }
        }
     break;
      case RUN:{
@@ -122,6 +136,7 @@ void nRFDongle::parsingSerial(){
         first_run = true;      //set first run for next State
          }
          else { 
+          done = false;  
           State = RF_WRITE;  
           first_run = true;     //set first run for next State
           timeStart = millis();    
@@ -178,6 +193,7 @@ else {
    callOK();    
    State = SERIAL_CHECK;    //exit when time out
             first_run = true;      //set first run for next State
+            done = true;
      #ifdef DEBUG 
          Serial.print("Sending fail to address: ");
          Serial.println(toNode);
@@ -197,6 +213,7 @@ if (millis()-timeStart >timeout) {
   callOK();
   State = SERIAL_CHECK; 
            first_run = true;      //set first run for next State
+           done = true;          //if timeout and not received, skip command
   
   return;
 }
@@ -217,8 +234,8 @@ if ( radio.RFDataCome() )  {
     }
   if (RFread_size > 1) {
      State = SERIAL_SEND;
-              first_run = true;      //set first run for next State
-
+     first_run = true;      //set first run for next State
+     if (RFbuf[0]==0xFF && RFbuf[1]==0x55 && RFbuf[2]==0xD && RFbuf[3]==0xA) done = true; 
         }
   else {
    callOK(); 
@@ -228,7 +245,7 @@ if ( radio.RFDataCome() )  {
    #endif   
    State = SERIAL_CHECK; 
    first_run = true;      //set first run for next State
-
+   done = true; //skip command 
   } 
  }
 
@@ -414,4 +431,13 @@ uint16_t nRFDongle::EEPROM_readInt(int address){
 uint16_t two = EEPROM.read(address);
 uint16_t one = EEPROM.read(address+1); 
 return ((two & 0xFF) + ((one<<8)&0xFFFF));
+}
+////
+void nRFDongle::sendFloat(float value){ 
+     writeSerial(0x2);
+     val.floatVal = value;
+     writeSerial(val.byteVal[0]);
+     writeSerial(val.byteVal[1]);
+     writeSerial(val.byteVal[2]);
+     writeSerial(val.byteVal[3]);
 }
