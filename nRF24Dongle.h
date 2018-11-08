@@ -7,8 +7,11 @@
 
 #ifndef rFDongle_H
 #define rFDongle_H
-//#define DEBUG 1
-//#define DEBUG_SERIAL 1////////////////////////////////////
+#define DEBUG 1
+//#define DEBUG_SERIAL 1
+//#define DEBUG_CONFIG 1
+#define DEBUG_STATE 1
+////////////////////////////////////
 #include "EasyRF.h"
 #include <SPI.h>
 #include "Scratch.h"
@@ -84,8 +87,9 @@ bool isStart = false;
 unsigned char prevc = 0; 
 byte index = 0;
 byte dataLen = 0;
-unsigned char buffer[32]; // buffer for serial read data 
-unsigned char RFbuf[32]; 
+uint8_t buffer[32]; // buffer for serial read data 
+uint8_t RFbuf[32]; 
+uint8_t dump[32];
 int RFread_size=0; 
 unsigned char serialRead;
 double timeStart; 
@@ -119,6 +123,7 @@ uint8_t CFGbuffer[32];
   void loadConfig();
   void EEPROM_writeInt(int address,uint16_t value);
   uint16_t EEPROM_readInt(int address);
-
+  void clearBuffer(unsigned char *buf, int leng);
+  void clearRX();
 };/////
 #endif

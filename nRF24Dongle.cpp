@@ -5,9 +5,11 @@ Serial.begin(115200);
 SPI.begin();
 loadConfig();
 radio.init(myNode);//init RF and setting Master Node address 
-   #ifdef DEBUG 
+   #ifdef DEBUG_CONFIG
          Serial.print("Dongle begin with address: ");
-         Serial.println(myNode);
+         Serial.print(myNode);
+         Serial.print("         -Target address: ");
+         Serial.println(toNode);
          Serial.print("State now: ");
          Serial.println(State);
          Serial.println("Go to Read Serial");
@@ -89,10 +91,15 @@ if (isAvailable) {
    if (!isStart&&!isAvailable) 
      {
         checkConfig();
-    }
-  
+     }
+   
 }
-
+////
+void nRFDongle::clearBuffer(unsigned char *buf, int leng){
+  for (int i=0;i<leng;i++) {
+    *(buf+i) = 0; 
+  }
+}
 ///////////////////////////////////////////////////////////////////
 void nRFDongle::callOK(){   //sending 0xff 0x55 /r /n
  Serial.write(0xff);
@@ -114,12 +121,23 @@ void nRFDongle::parsingSerial(){
       timeout=GET_TIMEOUT;
       }
       else {
+          #ifdef DEBUG
+          Serial.print("Check command done from robot..");
+          #endif 
           Serial.write(0xff);
-          Serial.write(0x55);        
-          Serial.write(idx);
+          delayMicroseconds(100);
+          Serial.write(0x55);      
+         delayMicroseconds(100);
+            Serial.write(idx);
+          delayMicroseconds(100);
+          
           sendFloat(done);
           Serial.println();
+            #ifdef DEBUG
+          Serial.print("Result: ..");          Serial.print(done);
+          Serial.println("   Go back to check Serial");
 
+          #endif 
           State = SERIAL_CHECK;
         first_run = true;
       }
@@ -147,49 +165,44 @@ void nRFDongle::parsingSerial(){
         timeout=RUN_TIMEOUT; 
      }
       break;
-      case RESET:{
-        //reset
-        callOK();
-        State = SERIAL_CHECK; 
-        first_run = true;      //set first run for next State
-
-      }
-     break;
-     case START:{
-        //start
-        callOK();
-        State = SERIAL_CHECK; 
-        first_run = true;      //set first run for next State
-
-      }
-     break;
+   
      
   }
 }
-
+////
+void nRFDongle::clearRX(){
+  if (radio.RFDataCome()) {
+    while (radio.RFDataCome()) radio.RFRead(dump);
+  }
+}
 ///////////////////////////////////////////////////////////////
 void nRFDongle::writeRF(){
   #ifdef DEBUG 
          Serial.print("..Sending data to address: ");
-         Serial.println(toNode);
+         Serial.print(toNode);
    #endif
-
+//clearRX();
 bool OK = radio.RFSend(toNode,buffer,payloadLen+3);
   #ifdef DEBUG 
-         Serial.print("Sent!.. ");
+         Serial.println("  Sent!.. ");
    #endif
 if (OK) {
-  State = RF_READ;  //if onnect and send successfully 
+   State = RF_READ;  //if onnect and send successfully 
    first_run = true;      //set first run for next State
+   timeStart = millis();
 
    #ifdef DEBUG 
          Serial.print("Send Successfully to address: ");
          Serial.println(toNode);
          Serial.println("Go to Read RF");
    #endif
+   clearBuffer(buffer,32);
+   clearBuffer(RFbuf,32);
+
+   return;
 }
 else {
-   if (millis()-timeStart>timeout/2) {
+  // if (millis()-timeStart>timeout/2) {
    callOK();    
    State = SERIAL_CHECK;    //exit when time out
             first_run = true;      //set first run for next State
@@ -199,17 +212,20 @@ else {
          Serial.println(toNode);
         Serial.println("Go to back to read Serial");
      #endif 
-   }
+    return; 
+  // }
  }
 }
 ///////////////////////////////////////////////////////////
 void nRFDongle::readRF(){
 RFread_size = 0;
-if (millis()-timeStart >timeout) {
+if (millis()-timeStart >timeout) {  //if no data come in over timeout, return
+    
      #ifdef DEBUG 
          Serial.print("..Time out, not received response");
          Serial.println("Go back to Read Serial");
      #endif
+     Serial.println("READING TIMEOUT");
   callOK();
   State = SERIAL_CHECK; 
            first_run = true;      //set first run for next State
@@ -221,21 +237,23 @@ if ( radio.RFDataCome() )  {
      #ifdef DEBUG 
        Serial.println("RF data comming, read available");
      #endif
-    RFread_size = radio.RFRead(RFbuf);
+     while (radio.RFDataCome() )  RFread_size = radio.RFRead(RFbuf);
        #ifdef DEBUG 
          Serial.print("Read RF buffer from Slave Node address ");
          Serial.println(toNode);
+         
          for (int i = 0;i<RFread_size;i++) {
            Serial.print(RFbuf[i],HEX);Serial.print(" ");
          }
          Serial.println();
          Serial.println("Go to Write Serial data:");
        #endif
-    }
-  if (RFread_size > 1) {
+   // }
+  if (RFread_size >=4) {
+     done = true; 
      State = SERIAL_SEND;
      first_run = true;      //set first run for next State
-     if (RFbuf[0]==0xFF && RFbuf[1]==0x55 && RFbuf[2]==0xD && RFbuf[3]==0xA) done = true; 
+     if (RFbuf[0]==0xFF && RFbuf[1]==0x55 && RFbuf[2]==0xD && RFbuf[3]==0xA) done = true; //done signal from robot
         }
   else {
    callOK(); 
@@ -246,10 +264,11 @@ if ( radio.RFDataCome() )  {
    State = SERIAL_CHECK; 
    first_run = true;      //set first run for next State
    done = true; //skip command 
-  } 
+    } 
+  }
  }
 
-///////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 void nRFDongle::sendSerial(){
 #if DEBUG
 Serial.print("SENDING DATA RESPONSE TO PC...:"); Serial.println(RFread_size);
@@ -265,14 +284,14 @@ first_run = true;   //set first run for next State
 Serial.println("SENDING DONE! BACK TO READ SERIAL COMMAND");
 #endif
 }
-///////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
 void nRFDongle::run(){
 if (first_run)  {
    timeStart = millis();
-   #ifdef DEBUG 
+   #ifdef DEBUG_STATE 
          Serial.print("State No: ");
          Serial.println(State);
-         Serial.println(" Begin");
+       //  Serial.println(" Begin");
    #endif
    first_run = false; 
 }  
@@ -406,7 +425,6 @@ EEPROM_writeInt(2,toNode);
 }
 ////
 void nRFDongle::loadConfig(){
-uint16_t myAd,toAd;  
 myNode = EEPROM_readInt(0);
 toNode = EEPROM_readInt(2);
 //set_address(myAd,toAd);
@@ -435,9 +453,18 @@ return ((two & 0xFF) + ((one<<8)&0xFFFF));
 ////
 void nRFDongle::sendFloat(float value){ 
      Serial.write(0x2);
+               delayMicroseconds(100);
+
      val.floatVal = value;
      Serial.write(val.byteVal[0]);
+    delayMicroseconds(100);
      Serial.write(val.byteVal[1]);
+      delayMicroseconds(100);
+
      Serial.write(val.byteVal[2]);
+      delayMicroseconds(100);
+
      Serial.write(val.byteVal[3]);
+     delayMicroseconds(100);
+
 }
