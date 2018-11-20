@@ -177,16 +177,23 @@ void nRFDongle::clearRX(){
 }
 ///////////////////////////////////////////////////////////////
 void nRFDongle::writeRF(){
+  bool OK;
   #ifdef DEBUG 
          Serial.print("..Sending data to address: ");
          Serial.print(toNode);
    #endif
 //clearRX();
-bool OK = radio.RFSend(toNode,buffer,payloadLen+3);
-  #ifdef DEBUG 
+  if(mode == UNICAST){
+     OK = radio.RFSend(toNode,buffer,payloadLen+3);
+    #ifdef DEBUG 
          Serial.println("  Sent!.. ");
-   #endif
+    #endif
+  }
+  else{
+    OK = radio.RFMulticast(255,buffer,payloadLen+3);
+  }
 if (OK) {
+  if(mode == UNICAST){
    State = RF_READ;  //if onnect and send successfully 
    first_run = true;      //set first run for next State
    timeStart = millis();
@@ -198,7 +205,13 @@ if (OK) {
    #endif
    clearBuffer(buffer,32);
    clearBuffer(RFbuf,32);
-
+  }
+  else {
+    State = SERIAL_CHECK;  //if onnect and send successfully 
+    first_run = true;      //set first run for next State
+    clearBuffer(buffer,32);
+    clearBuffer(RFbuf,32);
+  }
    return;
 }
 else {
