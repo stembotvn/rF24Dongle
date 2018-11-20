@@ -7,8 +7,11 @@
 
 #ifndef rFDongle_H
 #define rFDongle_H
-//#define DEBUG 1
-//#define DEBUG_SERIAL 1////////////////////////////////////
+#define DEBUG 1
+//#define DEBUG_SERIAL 1
+//#define DEBUG_CONFIG 1
+#define DEBUG_STATE 1
+////////////////////////////////////
 #include "EasyRF.h"
 #include <SPI.h>
 #include "Scratch.h"
@@ -76,6 +79,7 @@ uint16_t multiCast_Node = MULTICAST_ADDRESS;
 uint16_t  Default_Addr = DEFAULT_ADDRESS;
 uint8_t configMode = RANDOOM_ADDRESSING; 
 bool mode = UNICAST;            ///send to 1 node 
+bool done = false; 
 uint8_t payloadLen;             
 ////variable for Serial function
 bool isAvailable = false; 
@@ -83,8 +87,9 @@ bool isStart = false;
 unsigned char prevc = 0; 
 byte index = 0;
 byte dataLen = 0;
-unsigned char buffer[32]; // buffer for serial read data 
-unsigned char RFbuf[32]; 
+uint8_t buffer[32]; // buffer for serial read data 
+uint8_t RFbuf[32]; 
+uint8_t dump[32];
 int RFread_size=0; 
 unsigned char serialRead;
 double timeStart; 
@@ -99,6 +104,11 @@ uint8_t CFGbuffer[32];
     byte byteVal[2];
     short shortVal;
   }valShort;
+  union{
+    byte byteVal[4];
+    float floatVal;
+    long longVal;
+}val;
   //////////////////////////////////////////////////////////////
   void startPackage(uint8_t *buf,uint8_t type,uint8_t action); 
   void addValue(int pos,uint16_t value);
@@ -108,10 +118,12 @@ uint8_t CFGbuffer[32];
   void writeBuffer(int index,unsigned char c); //write to RF Sending Buffer
   /////////////////////////////////
   void sendShort(double value); 
+  void sendFloat(float value);
   void saveConfig();
   void loadConfig();
   void EEPROM_writeInt(int address,uint16_t value);
   uint16_t EEPROM_readInt(int address);
-
+  void clearBuffer(unsigned char *buf, int leng);
+  void clearRX();
 };/////
 #endif
