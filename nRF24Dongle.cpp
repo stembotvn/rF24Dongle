@@ -145,11 +145,9 @@ void nRFDongle::parsingSerial(){
     break;
      case RUN:{
        if (action_type == SET_ADDRESS) { // setting target address for Robot; 
-        set_address(MASTER,buffer[6]);      //save new address to RAM for next CONFIG PROCESS  
         callOK();
         if (buffer[6]==255) mode = MULTICAST;
-        else mode = UNICAST;
-        configMode = NETWORK_ADDRESSING;
+        else if (buffer[6]==0) mode = UNICAST;
         State = SERIAL_CHECK;         //Done, go back to Serial read for next message
         first_run = true;      //set first run for next State
          }
@@ -206,7 +204,11 @@ if (OK) {
    clearBuffer(buffer,32);
    clearBuffer(RFbuf,32);
   }
-  else {
+  else {  //in Multicast mode 
+     #ifdef DEBUG 
+         Serial.print("Send Successfully to Multicast Channel ");
+         Serial.println("- Go to Read RF");
+   #endif
     State = SERIAL_CHECK;  //if onnect and send successfully 
     first_run = true;      //set first run for next State
     clearBuffer(buffer,32);
