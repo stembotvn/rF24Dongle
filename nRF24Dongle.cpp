@@ -176,19 +176,24 @@ void nRFDongle::clearRX(){
 ///////////////////////////////////////////////////////////////
 void nRFDongle::writeRF(){
   bool OK;
-  #ifdef DEBUG 
-         Serial.print("..Sending data to address: ");
-         Serial.print(toNode);
-   #endif
+  
 //clearRX();
   if(mode == UNICAST){
      OK = radio.RFSend(toNode,buffer,payloadLen+3);
+     #ifdef DEBUG 
+         Serial.print("..Sending data to address: ");
+         Serial.println(toNode);
+    #endif
     #ifdef DEBUG 
          Serial.println("  Sent!.. ");
     #endif
   }
   else{
-    OK = radio.RFMulticast(255,buffer,payloadLen+3);
+    #ifdef DEBUG 
+         Serial.println("..Sending data to Multicast");
+    #endif
+    OK = radio.RFMulticast(250,buffer,payloadLen+3);
+    
   }
 if (OK) {
   if(mode == UNICAST){
@@ -207,7 +212,7 @@ if (OK) {
   else {  //in Multicast mode 
      #ifdef DEBUG 
          Serial.print("Send Successfully to Multicast Channel ");
-         Serial.println("- Go to Read RF");
+         Serial.println("- Go to Serial Check");
    #endif
     State = SERIAL_CHECK;  //if onnect and send successfully 
     first_run = true;      //set first run for next State
@@ -359,8 +364,8 @@ if (!digitalRead(KEY)) {
       Serial.println("RANDOM ADDRESSING MODE CONFIG");
       #endif
       randomSeed(millis());
-      myNode = random(256,999);      //get randoom of my Address
-      toNode = random(1001,2000);  //get randoom of Targeting Address
+      myNode = random(1000,10000);      //get randoom of my Address
+      toNode = random(20000,50000);  //get randoom of Targeting Address
    //   myNode = (uint16_t)(millis()-start)/2;
    //   toNode = (uint16_t)(millis()-start);
       #ifdef DEBUG
