@@ -116,7 +116,6 @@ void nRFDongle::parsingSerial(){
       if (action_type!=DONE) {
        State  = RF_WRITE; 
        first_run = true;      //set first run for next State
-
        timeStart = millis();
       timeout=GET_TIMEOUT;
       }
@@ -139,6 +138,8 @@ void nRFDongle::parsingSerial(){
 
           #endif 
           State = SERIAL_CHECK;
+          clearBuffer(buffer,32);
+
         first_run = true;
       }
        }
@@ -149,7 +150,8 @@ void nRFDongle::parsingSerial(){
         if (buffer[6]==255) mode = MULTICAST;
         else if (buffer[6]==0) mode = UNICAST;
         State = SERIAL_CHECK;         //Done, go back to Serial read for next message
-        first_run = true;      //set first run for next State
+         first_run = true;      //set first run for next State
+         clearBuffer(buffer,32);
          }
          else { 
           done = false;  
@@ -163,7 +165,12 @@ void nRFDongle::parsingSerial(){
         timeout=RUN_TIMEOUT; 
      }
       break;
-   
+    default: {
+       State = SERIAL_CHECK;
+       clearBuffer(buffer,32);
+
+        first_run = true;
+    }
      
   }
 }
@@ -227,6 +234,8 @@ else {
    State = SERIAL_CHECK;    //exit when time out
             first_run = true;      //set first run for next State
             done = true;
+   clearBuffer(buffer,32);
+    clearBuffer(RFbuf,32);   
      #ifdef DEBUG 
          Serial.print("Sending fail to address: ");
          Serial.println(toNode);
