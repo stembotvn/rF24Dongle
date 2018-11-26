@@ -248,6 +248,7 @@ else {
 ///////////////////////////////////////////////////////////
 void nRFDongle::readRF(){
 RFread_size = 0;
+clearBuffer(RFbuf,32)
 if (millis()-timeStart >timeout) {  //if no data come in over timeout, return
     
      #ifdef DEBUG 
@@ -259,6 +260,7 @@ if (millis()-timeStart >timeout) {  //if no data come in over timeout, return
   State = SERIAL_CHECK; 
            first_run = true;      //set first run for next State
            done = true;          //if timeout and not received, skip command
+           clearBuffer(buffer,32);
   
   return;
 }
@@ -291,6 +293,7 @@ if ( radio.RFDataCome() )  {
          Serial.println("Data received not match");
    #endif   
    State = SERIAL_CHECK; 
+   clearBuffer(buffer,32);
    first_run = true;      //set first run for next State
    done = true; //skip command 
     } 
@@ -309,6 +312,7 @@ for (int i = 0;i<RFread_size;i++) {
   }
 State = SERIAL_CHECK;  
 first_run = true;   //set first run for next State
+clearBuffer(buffer,32);
 #if DEBUG
 Serial.println("SENDING DONE! BACK TO READ SERIAL COMMAND");
 #endif
