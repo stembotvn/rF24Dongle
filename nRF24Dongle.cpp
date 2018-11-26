@@ -248,7 +248,7 @@ else {
 ///////////////////////////////////////////////////////////
 void nRFDongle::readRF(){
 RFread_size = 0;
-clearBuffer(RFbuf,32)
+clearBuffer(RFbuf,32);
 if (millis()-timeStart >timeout) {  //if no data come in over timeout, return
     
      #ifdef DEBUG 
