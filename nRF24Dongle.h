@@ -61,6 +61,7 @@ int State = SERIAL_CHECK;
 RF24 myRadio = RF24(CE_PIN, CSN_PIN);
 EasyRF radio = EasyRF(myRadio);   
 void init(); 
+//void reset_RF();
 void set_address(uint16_t from,uint16_t to);
 void readSerial();
 void parsingSerial();
@@ -69,7 +70,7 @@ void readRF();
 void callOK();
 void sendSerial();
 void checkConfig();
-void sendConfig();
+bool sendConfig(int _my,int _to);
 void run();
 
 private: 

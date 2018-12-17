@@ -236,6 +236,7 @@ else {
             done = true;
    clearBuffer(buffer,32);
     clearBuffer(RFbuf,32);   
+    init();
      #ifdef DEBUG 
          Serial.print("Sending fail to address: ");
          Serial.println(toNode);
@@ -261,6 +262,7 @@ if (millis()-timeStart >timeout) {  //if no data come in over timeout, return
            first_run = true;      //set first run for next State
            done = true;          //if timeout and not received, skip command
            clearBuffer(buffer,32);
+           init();
   
   return;
 }
@@ -362,9 +364,11 @@ switch (State) {
 ///Private function////////
 void nRFDongle::checkConfig() {
 bool accessed = false;
+int new_myNode;
+int new_toNode;
 if (!digitalRead(KEY)) {
   double start = millis();  
-  while (!digitalRead(KEY)) {
+  while (!digitalRead(KEY)&&!accessed) {
     if (millis()-start>500) accessed = true; 
   }
   if (accessed) {//access Sending CONFIG IF PRESS AND HOLD KEY IN 2 SEC
@@ -377,8 +381,8 @@ if (!digitalRead(KEY)) {
       Serial.println("RANDOM ADDRESSING MODE CONFIG");
       #endif
       randomSeed(millis());
-      myNode = random(1000,10000);      //get randoom of my Address
-      toNode = random(20000,50000);  //get randoom of Targeting Address
+      new_myNode = random(1000,10000);      //get randoom of my Address
+      new_toNode = random(20000,50000);  //get randoom of Targeting Address
    //   myNode = (uint16_t)(millis()-start)/2;
    //   toNode = (uint16_t)(millis()-start);
       #ifdef DEBUG
@@ -388,17 +392,28 @@ if (!digitalRead(KEY)) {
       delay(1000);
       radio.init(myNode); // update my address
       mode = UNICAST; 
-      sendConfig();
-      saveConfig();
+      if (sendConfig(new_myNode,new_toNode)) {
+      saveConfig();   //
+      #ifdef DEBUG
+      Serial.println("Set new address successfully");
+      #endif
+      } 
+      else {
+      #ifdef DEBUG
+      Serial.println("Set new address fail, please check the robot connection");
+      #endif  
+      }
+       
       accessed = false; 
       }
       else if (configMode == NETWORK_ADDRESSING) {
       #ifdef DEBUG
       Serial.println("RANDOM ADDRESSING MODE CONFIG");
       #endif  
-      sendConfig();  //just send config to target, not save in DOngle. 
       }
-   }
+    //  sendConfig();  //just send config to target, not save in DOngle. 
+      }
+   
    else {
       #ifdef DEBUG
       Serial.println("Not access to CONFIG MODE");
@@ -408,10 +423,10 @@ if (!digitalRead(KEY)) {
 
 }
 /////
-void nRFDongle::sendConfig(){
+bool nRFDongle::sendConfig(int _to,int _my){
  #ifdef DEBUG
       Serial.println("Sending config data:...");
-      Serial.print("USB Address: ");Serial.print(myNode); Serial.print("   Robot address: "); Serial.println(toNode);
+      Serial.print("USB Address: ");Serial.print(_my); Serial.print("   Robot address: "); Serial.println(_to);
       #endif
 idx = 0;
 CFGbuffer[idx++] = 0xFF;
@@ -420,8 +435,8 @@ CFGbuffer[idx++] = 0x00;   //Len = 6 bytes
 CFGbuffer[idx++] = 0x00;
 CFGbuffer[idx++] = 0x02; //RUN, NOT GET RESPONSE VALUE
 CFGbuffer[idx++] = 80;   // CONFIG ADDRESSING TYPE OF COMMAND
-addValue(idx,toNode);
-addValue(idx,myNode);
+addValue(idx,_to);
+addValue(idx,_my);
 //CFGbuffer[idx] = 0xA; // line Feed
 int len = idx + 1;
 CFGbuffer[2] = len-3;
@@ -442,6 +457,8 @@ else {
   Serial.println("Sent Config addressing FAIL!");
   #endif
  }  
+   return OK;
+
 }
 ////////////////////////////////////////////////////
 void nRFDongle::addValue(int pos,uint16_t val) {
