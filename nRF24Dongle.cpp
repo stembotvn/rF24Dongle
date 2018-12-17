@@ -393,7 +393,7 @@ if (!digitalRead(KEY)) {
       radio.init(myNode); // update my address
       mode = UNICAST; 
       if (sendConfig(new_myNode,new_toNode)) {
-      saveConfig();   //
+      saveConfig(new_myNode,new_toNode);   //
       #ifdef DEBUG
       Serial.println("Set new address successfully");
       #endif
@@ -468,9 +468,9 @@ CFGbuffer[idx++] = valShort.byteVal[0];
 CFGbuffer[idx++] = valShort.byteVal[1];
 }
 //////////////////////////////////////////////////
-void nRFDongle::saveConfig(){
-EEPROM_writeInt(0,myNode);
-EEPROM_writeInt(2,toNode);
+void nRFDongle::saveConfig(int new_my,int new_to){
+EEPROM_writeInt(0,new_my);
+EEPROM_writeInt(2,new_to);
 
 }
 ////

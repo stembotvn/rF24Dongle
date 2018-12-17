@@ -120,7 +120,7 @@ uint8_t CFGbuffer[32];
   /////////////////////////////////
   void sendShort(double value); 
   void sendFloat(float value);
-  void saveConfig();
+  void saveConfig(int new_my,int new_to);
   void loadConfig();
   void EEPROM_writeInt(int address,uint16_t value);
   uint16_t EEPROM_readInt(int address);
