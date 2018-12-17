@@ -387,13 +387,16 @@ if (!digitalRead(KEY)) {
    //   toNode = (uint16_t)(millis()-start);
       #ifdef DEBUG
       Serial.println("Got new address");
-      Serial.print("My address: ");Serial.print(myNode,HEX);Serial.print("  Target address: ");Serial.println(toNode,HEX);
+      Serial.print("My address: ");Serial.print(new_myNode,HEX);Serial.print("  Target address: ");Serial.println(new_toNode,HEX);
       #endif
       delay(1000);
-      radio.init(myNode); // update my address
+      
       mode = UNICAST; 
       if (sendConfig(new_myNode,new_toNode)) {
-      saveConfig(new_myNode,new_toNode);   //
+      saveConfig(new_myNode,new_toNode);
+      myNode = new_myNode;   //
+      toNode = new_toNode;
+      radio.init(myNode); // update my address
       #ifdef DEBUG
       Serial.println("Set new address successfully");
       #endif
