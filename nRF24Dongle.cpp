@@ -364,8 +364,8 @@ switch (State) {
 ///Private function////////
 void nRFDongle::checkConfig() {
 bool accessed = false;
-int new_myNode;
-int new_toNode;
+uint16_t new_myNode;
+uint16_t new_toNode;
 if (!digitalRead(KEY)) {
   double start = millis();  
   while (!digitalRead(KEY)&&!accessed) {
@@ -387,7 +387,7 @@ if (!digitalRead(KEY)) {
    //   toNode = (uint16_t)(millis()-start);
       #ifdef DEBUG
       Serial.println("Got new address");
-      Serial.print("My address: ");Serial.print(new_myNode,HEX);Serial.print("  Target address: ");Serial.println(new_toNode,HEX);
+      Serial.print("My address: ");Serial.print(new_myNode);Serial.print("  Target address: ");Serial.println(new_toNode);
       #endif
       delay(1000);
       
@@ -426,7 +426,7 @@ if (!digitalRead(KEY)) {
 
 }
 /////
-bool nRFDongle::sendConfig(int _to,int _my){
+bool nRFDongle::sendConfig(uint16_t _my,uint16_t _to){
  #ifdef DEBUG
       Serial.println("Sending config data:...");
       Serial.print("USB Address: ");Serial.print(_my); Serial.print("   Robot address: "); Serial.println(_to);
@@ -471,7 +471,7 @@ CFGbuffer[idx++] = valShort.byteVal[0];
 CFGbuffer[idx++] = valShort.byteVal[1];
 }
 //////////////////////////////////////////////////
-void nRFDongle::saveConfig(int new_my,int new_to){
+void nRFDongle::saveConfig(uint16_t new_my,uint16_t new_to){
 EEPROM_writeInt(0,new_my);
 EEPROM_writeInt(2,new_to);
 

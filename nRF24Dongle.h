@@ -70,7 +70,7 @@ void readRF();
 void callOK();
 void sendSerial();
 void checkConfig();
-bool sendConfig(int _my,int _to);
+bool sendConfig(uint16_t _my,uint16_t _to);
 void run();
 
 private: 
@@ -120,7 +120,7 @@ uint8_t CFGbuffer[32];
   /////////////////////////////////
   void sendShort(double value); 
   void sendFloat(float value);
-  void saveConfig(int new_my,int new_to);
+  void saveConfig(uint16_t new_my,uint16_t new_to);
   void loadConfig();
   void EEPROM_writeInt(int address,uint16_t value);
   uint16_t EEPROM_readInt(int address);
