@@ -1,9 +1,13 @@
 #include "nRF24Dongle.h"
 
 void nRFDongle::init(){
+
 Serial.begin(115200);
 SPI.begin();
 loadConfig();
+radio.RFpowerDown();//////////////;///////////
+delay(500);
+radio.RFpowerUp();  
 radio.init(myNode);//init RF and setting Master Node address 
    #ifdef DEBUG_CONFIG
          Serial.print("Dongle begin with address: ");
@@ -251,7 +255,7 @@ void nRFDongle::readRF(){
 RFread_size = 0;
 clearBuffer(RFbuf,32);
 if (millis()-timeStart >timeout) {  //if no data come in over timeout, return
-    
+       init();
      #ifdef DEBUG 
          Serial.print("..Time out, not received response");
          Serial.println("Go back to Read Serial");
@@ -262,7 +266,7 @@ if (millis()-timeStart >timeout) {  //if no data come in over timeout, return
            first_run = true;      //set first run for next State
            done = true;          //if timeout and not received, skip command
            clearBuffer(buffer,32);
-           init();
+          
   
   return;
 }

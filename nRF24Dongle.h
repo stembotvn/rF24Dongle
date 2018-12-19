@@ -7,10 +7,10 @@
 
 #ifndef rFDongle_H
 #define rFDongle_H
-#define DEBUG 1
+//#define DEBUG 1
 //#define DEBUG_SERIAL 1
 //#define DEBUG_CONFIG 1
-#define DEBUG_STATE 1
+//#define DEBUG_STATE 1
 ////////////////////////////////////
 #include "EasyRF.h"
 #include <SPI.h>
@@ -48,8 +48,8 @@
 #define DEFAULT_ADDRESS 1000
 /////
 #define MAX_READ_SIZE 32
-#define RUN_TIMEOUT    10000L  
-#define GET_TIMEOUT    10000L
+#define RUN_TIMEOUT    5000L  
+#define GET_TIMEOUT    2000L
 ///define for New 
 #define RANDOOM_ADDRESSING 0
 #define NETWORK_ADDRESSING 1
