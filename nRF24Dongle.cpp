@@ -280,7 +280,7 @@ if ( radio.RFDataCome() )  {
          Serial.print("Read RF buffer from Slave Node address ");
          Serial.println(toNode);
          
-         for (int i = 0;i<RFread_size;i++) {
+         for (int i = 0;i<8;i++) {
            Serial.print(RFbuf[i],HEX);Serial.print(" ");
          }
          Serial.println();
