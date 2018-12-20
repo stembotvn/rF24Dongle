@@ -8,6 +8,7 @@ loadConfig();
 radio.RFpowerDown();//////////////;///////////
 delay(500);
 radio.RFpowerUp();  
+radio.setDynamicPayload(false);
 radio.init(myNode);//init RF and setting Master Node address 
    #ifdef DEBUG_CONFIG
          Serial.print("Dongle begin with address: ");
@@ -274,7 +275,7 @@ if ( radio.RFDataCome() )  {
      #ifdef DEBUG 
        Serial.println("RF data comming, read available");
      #endif
-     while (radio.RFDataCome() )  RFread_size = radio.RFRead(RFbuf);
+     while (radio.RFDataCome() )   radio.RFRead(RFbuf);
        #ifdef DEBUG 
          Serial.print("Read RF buffer from Slave Node address ");
          Serial.println(toNode);
@@ -286,13 +287,13 @@ if ( radio.RFDataCome() )  {
          Serial.println("Go to Write Serial data:");
        #endif
    // }
-  if (RFread_size >=4) {
+ // if (RFread_size >=4) {
      done = true; 
      State = SERIAL_SEND;
      first_run = true;      //set first run for next State
      if (RFbuf[0]==0xFF && RFbuf[1]==0x55 && RFbuf[2]==0xD && RFbuf[3]==0xA) done = true; //done signal from robot
-        }
-  else {
+ //       }
+ /* else {
    callOK(); 
       #ifdef DEBUG 
          
@@ -302,7 +303,7 @@ if ( radio.RFDataCome() )  {
    clearBuffer(buffer,32);
    first_run = true;      //set first run for next State
    done = true; //skip command 
-    } 
+    } */
   }
  }
 
