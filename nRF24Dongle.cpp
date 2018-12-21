@@ -10,6 +10,10 @@ delay(500);
 radio.RFpowerUp();  
 radio.setDynamicPayload(false);
 radio.init(myNode);//init RF and setting Master Node address 
+radio.setDataSpeed(RF24_1MBPS);
+  radio.setChannelRF(108);
+  radio.setPowerRF(RF24_PA_LOW);
+  radio.setAutoACK(true);
    #ifdef DEBUG_CONFIG
          Serial.print("Dongle begin with address: ");
          Serial.print(myNode);
