@@ -143,7 +143,7 @@ void nRFDongle::parsingSerial(){
 
           #endif 
           State = SERIAL_CHECK;
-          clearBuffer(buffer,32);
+          clearBuffer(buffer,sizeof(buffer));
 
         first_run = true;
       }
@@ -156,7 +156,7 @@ void nRFDongle::parsingSerial(){
         else if (buffer[6]==0) mode = UNICAST;
         State = SERIAL_CHECK;         //Done, go back to Serial read for next message
          first_run = true;      //set first run for next State
-         clearBuffer(buffer,32);
+         clearBuffer(buffer,sizeof(buffer));
          }
          else { 
           done = false;  
@@ -172,7 +172,7 @@ void nRFDongle::parsingSerial(){
       break;
     default: {
        State = SERIAL_CHECK;
-       clearBuffer(buffer,32);
+       clearBuffer(buffer,sizeof(buffer));
 
         first_run = true;
     }
@@ -191,20 +191,20 @@ void nRFDongle::writeRF(){
   
 //clearRX();
   if(mode == UNICAST){
-     OK = radio.RFSend(toNode,buffer,payloadLen+3);
+     OK = radio.RFSend(toNode,buffer,sizeof(buffer));
      #ifdef DEBUG 
          Serial.print("..Sending data to address: ");
          Serial.println(toNode);
     #endif
     #ifdef DEBUG 
-         Serial.println("  Sent!.. ");
+    Serial.println(radio.checkCarrier() ? "Strong signal > 64dBm" : "Weak signal < 64dBm" );   
     #endif
   }
   else{
     #ifdef DEBUG 
          Serial.println("..Sending data to Multicast");
     #endif
-    OK = radio.RFMulticast(250,buffer,payloadLen+3);
+    OK = radio.RFMulticast(250,buffer,sizeof(buffer));
     
   }
 if (OK) {
@@ -218,8 +218,8 @@ if (OK) {
          Serial.println(toNode);
          Serial.println("Go to Read RF");
    #endif
-   clearBuffer(buffer,32);
-   clearBuffer(RFbuf,32);
+   clearBuffer(buffer,sizeof(buffer));
+   clearBuffer(RFbuf,sizeof(RFbuf));
   }
   else {  //in Multicast mode 
      #ifdef DEBUG 
@@ -228,8 +228,8 @@ if (OK) {
    #endif
     State = SERIAL_CHECK;  //if onnect and send successfully 
     first_run = true;      //set first run for next State
-    clearBuffer(buffer,32);
-    clearBuffer(RFbuf,32);
+    clearBuffer(buffer,sizeof(buffer));
+    clearBuffer(RFbuf,sizeof(RFbuf));
   }
    return;
 }
@@ -239,8 +239,8 @@ else {
    State = SERIAL_CHECK;    //exit when time out
             first_run = true;      //set first run for next State
             done = true;
-   clearBuffer(buffer,32);
-    clearBuffer(RFbuf,32);   
+   clearBuffer(buffer,sizeof(buffer));
+    clearBuffer(RFbuf,sizeof(RFbuf));   
     init();
      #ifdef DEBUG 
          Serial.print("Sending fail to address: ");
@@ -254,7 +254,7 @@ else {
 ///////////////////////////////////////////////////////////
 void nRFDongle::readRF(){
 RFread_size = 0;
-clearBuffer(RFbuf,32);
+clearBuffer(RFbuf,sizeof(buffer));
 if (millis()-timeStart >timeout) {  //if no data come in over timeout, return
        init();
      #ifdef DEBUG 
@@ -266,7 +266,7 @@ if (millis()-timeStart >timeout) {  //if no data come in over timeout, return
   State = SERIAL_CHECK; 
            first_run = true;      //set first run for next State
            done = true;          //if timeout and not received, skip command
-           clearBuffer(buffer,32);
+           clearBuffer(buffer,sizeof(buffer));
           
   
   return;
@@ -275,12 +275,12 @@ if ( radio.RFDataCome() )  {
      #ifdef DEBUG 
        Serial.println("RF data comming, read available");
      #endif
-     while (radio.RFDataCome() )   radio.RFRead(RFbuf);
+     while (radio.RFDataCome() )   radio.RFRead(RFbuf,sizeof(RFbuf));
        #ifdef DEBUG 
          Serial.print("Read RF buffer from Slave Node address ");
          Serial.println(toNode);
          
-         for (int i = 0;i<8;i++) {
+         for (int i = 0;i<sizeof(RFbuf);i++) {
            Serial.print(RFbuf[i],HEX);Serial.print(" ");
          }
          Serial.println();
@@ -300,7 +300,7 @@ if ( radio.RFDataCome() )  {
          Serial.println("Data received not match");
    #endif   
    State = SERIAL_CHECK; 
-   clearBuffer(buffer,32);
+   clearBuffer(buffer,sizeof(buffer));
    first_run = true;      //set first run for next State
    done = true; //skip command 
     } */
@@ -312,14 +312,14 @@ void nRFDongle::sendSerial(){
 #if DEBUG
 Serial.print("SENDING DATA RESPONSE TO PC...:"); Serial.println(RFread_size);
 #endif
-for (int i = 0;i<RFread_size;i++) { 
+for (int i = 0;i<sizeof(RFbuf);i++) { 
   Serial.write(RFbuf[i]);
   _delay_us(100);
   //Serial.print(i);
   }
 State = SERIAL_CHECK;  
 first_run = true;   //set first run for next State
-clearBuffer(buffer,32);
+clearBuffer(buffer,sizeof(buffer));
 #if DEBUG
 Serial.println("SENDING DONE! BACK TO READ SERIAL COMMAND");
 #endif

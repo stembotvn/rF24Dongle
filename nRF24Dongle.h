@@ -89,7 +89,7 @@ unsigned char prevc = 0;
 byte index = 0;
 byte dataLen = 0;
 uint8_t buffer[32]; // buffer for serial read data 
-uint8_t RFbuf[32]; 
+uint8_t RFbuf[12]; 
 uint8_t dump[32];
 int RFread_size=0; 
 unsigned char serialRead;
