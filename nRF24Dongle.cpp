@@ -10,10 +10,10 @@ delay(500);
 radio.RFpowerUp();  
 radio.setDynamicPayload(false);
 radio.init(myNode);//init RF and setting Master Node address 
-radio.setDataSpeed(RF24_1MBPS);
+radio.setDataSpeed(RF24_250KBPS);
   radio.setChannelRF(108);
   radio.setPowerRF(RF24_PA_LOW);
-  radio.setAutoACK(true);
+  //radio.setAutoACK(false);
    #ifdef DEBUG_CONFIG
          Serial.print("Dongle begin with address: ");
          Serial.print(myNode);
@@ -200,9 +200,7 @@ void nRFDongle::writeRF(){
          Serial.print("..Sending data to address: ");
          Serial.println(toNode);
     #endif
-    #ifdef DEBUG 
-    Serial.println(radio.checkCarrier() ? "Strong signal > 64dBm" : "Weak signal < 64dBm" );   
-    #endif
+    
   }
   else{
     #ifdef DEBUG 
@@ -243,7 +241,7 @@ else {
    State = SERIAL_CHECK;    //exit when time out
             first_run = true;      //set first run for next State
             done = true;
-   clearBuffer(buffer,sizeof(buffer));
+    clearBuffer(buffer,sizeof(buffer));
     clearBuffer(RFbuf,sizeof(RFbuf));   
     init();
      #ifdef DEBUG 
@@ -258,7 +256,7 @@ else {
 ///////////////////////////////////////////////////////////
 void nRFDongle::readRF(){
 RFread_size = 0;
-clearBuffer(RFbuf,sizeof(buffer));
+//
 if (millis()-timeStart >timeout) {  //if no data come in over timeout, return
        init();
      #ifdef DEBUG 
