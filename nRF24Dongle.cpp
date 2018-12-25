@@ -277,7 +277,7 @@ if (millis()-timeStart >timeout) {  //if no data come in over timeout, return
 if ( radio.RFDataCome() )  {
      #ifdef DEBUG
     Serial.print("RF data come!  ");
-    Serial.println(Radio.checkCarrier() ? "Strong signal > 64dBm" : "Weak signal < 64dBm" );
+    Serial.println(radio.checkCarrier() ? "Strong signal > 64dBm" : "Weak signal < 64dBm" );
     #endif
     
      while (radio.RFDataCome() )   radio.RFRead(RFbuf,sizeof(RFbuf));
