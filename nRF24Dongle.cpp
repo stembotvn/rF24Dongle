@@ -275,14 +275,15 @@ if (millis()-timeStart >timeout) {  //if no data come in over timeout, return
   return;
 }
 if ( radio.RFDataCome() )  {
-     #ifdef DEBUG 
-       Serial.println("RF data comming, read available");
-     #endif
+     #ifdef DEBUG
+    Serial.print("RF data come!  ");
+    Serial.println(Radio.checkCarrier() ? "Strong signal > 64dBm" : "Weak signal < 64dBm" );
+    #endif
+    
      while (radio.RFDataCome() )   radio.RFRead(RFbuf,sizeof(RFbuf));
        #ifdef DEBUG 
          Serial.print("Read RF buffer from Slave Node address ");
-         Serial.println(toNode);
-         
+                 
          for (int i = 0;i<sizeof(RFbuf);i++) {
            Serial.print(RFbuf[i],HEX);Serial.print(" ");
          }
@@ -298,9 +299,9 @@ if ( radio.RFDataCome() )  {
  //       }
  /* else {
    callOK(); 
-      #ifdef DEBUG 
+   #ifdef DEBUG 
          
-         Serial.println("Data received not match");
+   Serial.println("Data received not match");
    #endif   
    State = SERIAL_CHECK; 
    clearBuffer(buffer,sizeof(buffer));
