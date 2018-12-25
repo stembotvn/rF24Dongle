@@ -3,16 +3,17 @@
 void nRFDongle::init(){
 
 Serial.begin(115200);
-SPI.begin();
-loadConfig();
+radio.RFbegin();
+loadConfig();      
 radio.RFpowerDown();//////////////;///////////
 delay(500);
-radio.RFpowerUp();  
-radio.setDynamicPayload(false);
-radio.init(myNode);//init RF and setting Master Node address 
+radio.RFpowerUp(); 
 radio.setDataSpeed(RF24_250KBPS);
   radio.setChannelRF(108);
-  radio.setPowerRF(RF24_PA_LOW);
+  radio.setPowerRF(RF24_PA_LOW); 
+radio.setDynamicPayload(false);
+radio.init(myNode);//init RF and setting Master Node address 
+
   //radio.setAutoACK(false);
    #ifdef DEBUG_CONFIG
          Serial.print("Dongle begin with address: ");
