@@ -72,7 +72,7 @@ void sendSerial();
 void checkConfig();
 bool sendConfig(uint16_t _my,uint16_t _to);
 void run();
-
+////////////////////////////////////////////////////////////////
 private: 
 uint16_t myNode = MASTER; 
 uint16_t toNode = 2;    

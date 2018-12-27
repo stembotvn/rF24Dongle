@@ -9,9 +9,10 @@ radio.RFpowerDown();//////////////;///////////
 delay(500);
 radio.RFpowerUp(); 
 radio.setDataSpeed(RF24_250KBPS);
-  radio.setChannelRF(108);
-  radio.setPowerRF(RF24_PA_LOW); 
+radio.setChannelRF(108);
+radio.setPowerRF(RF24_PA_HIGH); 
 radio.setDynamicPayload(false);
+radio.setAutoACK(true);
 radio.init(myNode);//init RF and setting Master Node address 
 
   //radio.setAutoACK(false);
