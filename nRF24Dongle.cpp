@@ -459,7 +459,7 @@ CFGbuffer[2] = len-3;
   }
   Serial.println();
   #endif
-bool OK=radio.RFSend(Default_Addr,CFGbuffer,len);
+bool OK=radio.RFSend(Default_Addr,CFGbuffer,sizeof(CFGbuffer));
 if (OK) { 
   #ifdef DEBUG
   Serial.println("Sent Config addressing successful ");
