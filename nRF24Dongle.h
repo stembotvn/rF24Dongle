@@ -10,7 +10,7 @@
 #define DEBUG 1
 //#define DEBUG_SERIAL 1
 //#define DEBUG_CONFIG 1
-#define DEBUG_STATE 1
+//#define DEBUG_STATE 1
 ////////////////////////////////////
 #include "EasyRF.h"
 #include <SPI.h>
@@ -48,8 +48,8 @@
 #define DEFAULT_ADDRESS 1000
 /////
 #define MAX_READ_SIZE 32
-#define RUN_TIMEOUT    10000L  
-#define GET_TIMEOUT    10000L
+#define RUN_TIMEOUT    5000L  
+#define GET_TIMEOUT    2000L
 ///define for New 
 #define RANDOOM_ADDRESSING 0
 #define NETWORK_ADDRESSING 1
@@ -61,6 +61,7 @@ int State = SERIAL_CHECK;
 RF24 myRadio = RF24(CE_PIN, CSN_PIN);
 EasyRF radio = EasyRF(myRadio);   
 void init(); 
+//void reset_RF();
 void set_address(uint16_t from,uint16_t to);
 void readSerial();
 void parsingSerial();
@@ -69,9 +70,9 @@ void readRF();
 void callOK();
 void sendSerial();
 void checkConfig();
-void sendConfig();
+bool sendConfig(uint16_t _my,uint16_t _to);
 void run();
-
+////////////////////////////////////////////////////////////////
 private: 
 uint16_t myNode = MASTER; 
 uint16_t toNode = 2;    
@@ -88,7 +89,7 @@ unsigned char prevc = 0;
 byte index = 0;
 byte dataLen = 0;
 uint8_t buffer[32]; // buffer for serial read data 
-uint8_t RFbuf[32]; 
+uint8_t RFbuf[12]; 
 uint8_t dump[32];
 int RFread_size=0; 
 unsigned char serialRead;
@@ -119,7 +120,7 @@ uint8_t CFGbuffer[32];
   /////////////////////////////////
   void sendShort(double value); 
   void sendFloat(float value);
-  void saveConfig();
+  void saveConfig(uint16_t new_my,uint16_t new_to);
   void loadConfig();
   void EEPROM_writeInt(int address,uint16_t value);
   uint16_t EEPROM_readInt(int address);

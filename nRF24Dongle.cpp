@@ -1,10 +1,21 @@
 #include "nRF24Dongle.h"
 
 void nRFDongle::init(){
+
 Serial.begin(115200);
-SPI.begin();
-loadConfig();
+radio.RFbegin();
+loadConfig();      
+radio.RFpowerDown();//////////////;///////////
+delay(500);
+radio.RFpowerUp(); 
+radio.setDataSpeed(RF24_250KBPS);
+radio.setChannelRF(108);
+radio.setPowerRF(RF24_PA_HIGH); 
+radio.setDynamicPayload(false);
+radio.setAutoACK(true);
 radio.init(myNode);//init RF and setting Master Node address 
+
+  //radio.setAutoACK(false);
    #ifdef DEBUG_CONFIG
          Serial.print("Dongle begin with address: ");
          Serial.print(myNode);
@@ -138,7 +149,7 @@ void nRFDongle::parsingSerial(){
 
           #endif 
           State = SERIAL_CHECK;
-          clearBuffer(buffer,32);
+          clearBuffer(buffer,sizeof(buffer));
 
         first_run = true;
       }
@@ -151,7 +162,7 @@ void nRFDongle::parsingSerial(){
         else if (buffer[6]==0) mode = UNICAST;
         State = SERIAL_CHECK;         //Done, go back to Serial read for next message
          first_run = true;      //set first run for next State
-         clearBuffer(buffer,32);
+         clearBuffer(buffer,sizeof(buffer));
          }
          else { 
           done = false;  
@@ -167,7 +178,7 @@ void nRFDongle::parsingSerial(){
       break;
     default: {
        State = SERIAL_CHECK;
-       clearBuffer(buffer,32);
+       clearBuffer(buffer,sizeof(buffer));
 
         first_run = true;
     }
@@ -186,20 +197,18 @@ void nRFDongle::writeRF(){
   
 //clearRX();
   if(mode == UNICAST){
-     OK = radio.RFSend(toNode,buffer,payloadLen+3);
+     OK = radio.RFSend(toNode,buffer,sizeof(buffer));
      #ifdef DEBUG 
          Serial.print("..Sending data to address: ");
          Serial.println(toNode);
     #endif
-    #ifdef DEBUG 
-         Serial.println("  Sent!.. ");
-    #endif
+    
   }
   else{
     #ifdef DEBUG 
          Serial.println("..Sending data to Multicast");
     #endif
-    OK = radio.RFMulticast(250,buffer,payloadLen+3);
+    OK = radio.RFMulticast(250,buffer,sizeof(buffer));
     
   }
 if (OK) {
@@ -213,8 +222,8 @@ if (OK) {
          Serial.println(toNode);
          Serial.println("Go to Read RF");
    #endif
-   clearBuffer(buffer,32);
-   clearBuffer(RFbuf,32);
+   clearBuffer(buffer,sizeof(buffer));
+   clearBuffer(RFbuf,sizeof(RFbuf));
   }
   else {  //in Multicast mode 
      #ifdef DEBUG 
@@ -223,8 +232,8 @@ if (OK) {
    #endif
     State = SERIAL_CHECK;  //if onnect and send successfully 
     first_run = true;      //set first run for next State
-    clearBuffer(buffer,32);
-    clearBuffer(RFbuf,32);
+    clearBuffer(buffer,sizeof(buffer));
+    clearBuffer(RFbuf,sizeof(RFbuf));
   }
    return;
 }
@@ -234,8 +243,9 @@ else {
    State = SERIAL_CHECK;    //exit when time out
             first_run = true;      //set first run for next State
             done = true;
-   clearBuffer(buffer,32);
-    clearBuffer(RFbuf,32);   
+    clearBuffer(buffer,sizeof(buffer));
+    clearBuffer(RFbuf,sizeof(RFbuf));   
+    init();
      #ifdef DEBUG 
          Serial.print("Sending fail to address: ");
          Serial.println(toNode);
@@ -248,9 +258,9 @@ else {
 ///////////////////////////////////////////////////////////
 void nRFDongle::readRF(){
 RFread_size = 0;
-clearBuffer(RFbuf,32);
+//
 if (millis()-timeStart >timeout) {  //if no data come in over timeout, return
-    
+       init();
      #ifdef DEBUG 
          Serial.print("..Time out, not received response");
          Serial.println("Go back to Read Serial");
@@ -260,43 +270,45 @@ if (millis()-timeStart >timeout) {  //if no data come in over timeout, return
   State = SERIAL_CHECK; 
            first_run = true;      //set first run for next State
            done = true;          //if timeout and not received, skip command
-           clearBuffer(buffer,32);
+           clearBuffer(buffer,sizeof(buffer));
+          
   
   return;
 }
 if ( radio.RFDataCome() )  {
-     #ifdef DEBUG 
-       Serial.println("RF data comming, read available");
-     #endif
-     while (radio.RFDataCome() )  RFread_size = radio.RFRead(RFbuf);
+     #ifdef DEBUG
+    Serial.print("RF data come!  ");
+    Serial.println(radio.checkCarrier() ? "Strong signal > 64dBm" : "Weak signal < 64dBm" );
+    #endif
+    
+     while (radio.RFDataCome() )   radio.RFRead(RFbuf,sizeof(RFbuf));
        #ifdef DEBUG 
          Serial.print("Read RF buffer from Slave Node address ");
-         Serial.println(toNode);
-         
-         for (int i = 0;i<RFread_size;i++) {
+                 
+         for (int i = 0;i<sizeof(RFbuf);i++) {
            Serial.print(RFbuf[i],HEX);Serial.print(" ");
          }
          Serial.println();
          Serial.println("Go to Write Serial data:");
        #endif
    // }
-  if (RFread_size >=4) {
+ // if (RFread_size >=4) {
      done = true; 
      State = SERIAL_SEND;
      first_run = true;      //set first run for next State
      if (RFbuf[0]==0xFF && RFbuf[1]==0x55 && RFbuf[2]==0xD && RFbuf[3]==0xA) done = true; //done signal from robot
-        }
-  else {
+ //       }
+ /* else {
    callOK(); 
-      #ifdef DEBUG 
+   #ifdef DEBUG 
          
-         Serial.println("Data received not match");
+   Serial.println("Data received not match");
    #endif   
    State = SERIAL_CHECK; 
-   clearBuffer(buffer,32);
+   clearBuffer(buffer,sizeof(buffer));
    first_run = true;      //set first run for next State
    done = true; //skip command 
-    } 
+    } */
   }
  }
 
@@ -305,14 +317,14 @@ void nRFDongle::sendSerial(){
 #if DEBUG
 Serial.print("SENDING DATA RESPONSE TO PC...:"); Serial.println(RFread_size);
 #endif
-for (int i = 0;i<RFread_size;i++) { 
+for (int i = 0;i<sizeof(RFbuf);i++) { 
   Serial.write(RFbuf[i]);
   _delay_us(100);
   //Serial.print(i);
   }
 State = SERIAL_CHECK;  
 first_run = true;   //set first run for next State
-clearBuffer(buffer,32);
+clearBuffer(buffer,sizeof(buffer));
 #if DEBUG
 Serial.println("SENDING DONE! BACK TO READ SERIAL COMMAND");
 #endif
@@ -362,9 +374,11 @@ switch (State) {
 ///Private function////////
 void nRFDongle::checkConfig() {
 bool accessed = false;
+uint16_t new_myNode;
+uint16_t new_toNode;
 if (!digitalRead(KEY)) {
   double start = millis();  
-  while (!digitalRead(KEY)) {
+  while (!digitalRead(KEY)&&!accessed) {
     if (millis()-start>500) accessed = true; 
   }
   if (accessed) {//access Sending CONFIG IF PRESS AND HOLD KEY IN 2 SEC
@@ -377,28 +391,42 @@ if (!digitalRead(KEY)) {
       Serial.println("RANDOM ADDRESSING MODE CONFIG");
       #endif
       randomSeed(millis());
-      myNode = random(1000,10000);      //get randoom of my Address
-      toNode = random(20000,50000);  //get randoom of Targeting Address
+      new_myNode = random(1000,10000);      //get randoom of my Address
+      new_toNode = random(20000,50000);  //get randoom of Targeting Address
    //   myNode = (uint16_t)(millis()-start)/2;
    //   toNode = (uint16_t)(millis()-start);
       #ifdef DEBUG
       Serial.println("Got new address");
-      Serial.print("My address: ");Serial.print(myNode,HEX);Serial.print("  Target address: ");Serial.println(toNode,HEX);
+      Serial.print("My address: ");Serial.print(new_myNode);Serial.print("  Target address: ");Serial.println(new_toNode);
       #endif
       delay(1000);
-      radio.init(myNode); // update my address
+      
       mode = UNICAST; 
-      sendConfig();
-      saveConfig();
+      if (sendConfig(new_myNode,new_toNode)) {
+      saveConfig(new_myNode,new_toNode);
+      myNode = new_myNode;   //
+      toNode = new_toNode;
+      radio.init(myNode); // update my address
+      #ifdef DEBUG
+      Serial.println("Set new address successfully");
+      #endif
+      } 
+      else {
+      #ifdef DEBUG
+      Serial.println("Set new address fail, please check the robot connection");
+      #endif  
+      }
+       
       accessed = false; 
       }
       else if (configMode == NETWORK_ADDRESSING) {
       #ifdef DEBUG
       Serial.println("RANDOM ADDRESSING MODE CONFIG");
       #endif  
-      sendConfig();  //just send config to target, not save in DOngle. 
       }
-   }
+    //  sendConfig();  //just send config to target, not save in DOngle. 
+      }
+   
    else {
       #ifdef DEBUG
       Serial.println("Not access to CONFIG MODE");
@@ -408,10 +436,10 @@ if (!digitalRead(KEY)) {
 
 }
 /////
-void nRFDongle::sendConfig(){
+bool nRFDongle::sendConfig(uint16_t _my,uint16_t _to){
  #ifdef DEBUG
       Serial.println("Sending config data:...");
-      Serial.print("USB Address: ");Serial.print(myNode); Serial.print("   Robot address: "); Serial.println(toNode);
+      Serial.print("USB Address: ");Serial.print(_my); Serial.print("   Robot address: "); Serial.println(_to);
       #endif
 idx = 0;
 CFGbuffer[idx++] = 0xFF;
@@ -420,8 +448,8 @@ CFGbuffer[idx++] = 0x00;   //Len = 6 bytes
 CFGbuffer[idx++] = 0x00;
 CFGbuffer[idx++] = 0x02; //RUN, NOT GET RESPONSE VALUE
 CFGbuffer[idx++] = 80;   // CONFIG ADDRESSING TYPE OF COMMAND
-addValue(idx,toNode);
-addValue(idx,myNode);
+addValue(idx,_to);
+addValue(idx,_my);
 //CFGbuffer[idx] = 0xA; // line Feed
 int len = idx + 1;
 CFGbuffer[2] = len-3;
@@ -431,7 +459,7 @@ CFGbuffer[2] = len-3;
   }
   Serial.println();
   #endif
-bool OK=radio.RFSend(Default_Addr,CFGbuffer,len);
+bool OK=radio.RFSend(Default_Addr,CFGbuffer,sizeof(CFGbuffer));
 if (OK) { 
   #ifdef DEBUG
   Serial.println("Sent Config addressing successful ");
@@ -442,6 +470,8 @@ else {
   Serial.println("Sent Config addressing FAIL!");
   #endif
  }  
+   return OK;
+
 }
 ////////////////////////////////////////////////////
 void nRFDongle::addValue(int pos,uint16_t val) {
@@ -451,9 +481,9 @@ CFGbuffer[idx++] = valShort.byteVal[0];
 CFGbuffer[idx++] = valShort.byteVal[1];
 }
 //////////////////////////////////////////////////
-void nRFDongle::saveConfig(){
-EEPROM_writeInt(0,myNode);
-EEPROM_writeInt(2,toNode);
+void nRFDongle::saveConfig(uint16_t new_my,uint16_t new_to){
+EEPROM_writeInt(0,new_my);
+EEPROM_writeInt(2,new_to);
 
 }
 ////
