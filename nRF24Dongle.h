@@ -10,7 +10,7 @@
 #define DEBUG 1
 //#define DEBUG_SERIAL 1
 //#define DEBUG_CONFIG 1
-//#define DEBUG_STATE 1
+#define DEBUG_STATE 1
 ////////////////////////////////////
 #include "EasyRF.h"
 #include <SPI.h>
