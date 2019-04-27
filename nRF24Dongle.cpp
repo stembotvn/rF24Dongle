@@ -179,6 +179,7 @@ void nRFDongle::parsingSerial(){
     default: {
        State = SERIAL_CHECK;
        clearBuffer(buffer,sizeof(buffer));
+       callOK();
 
         first_run = true;
     }
